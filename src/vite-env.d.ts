@@ -1,5 +1,14 @@
 /// <reference types="vite/client" />
 
+interface ImportMetaEnv {
+  /** Shared password gating the HQ / Admin views. Set in Vercel / .env.local. */
+  readonly VITE_ADMIN_PASSWORD?: string;
+}
+
+interface ImportMeta {
+  readonly env: ImportMetaEnv;
+}
+
 declare module "*.asset.json" {
   const asset: {
     version: number;

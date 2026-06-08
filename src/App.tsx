@@ -9,25 +9,19 @@ import { NewBooking } from './pages/NewBooking';
 import { AdminOverview } from './pages/AdminOverview';
 import { ExportView } from './pages/ExportView';
 import { ConfirmationScreen } from './components/ConfirmationScreen';
+import { AdminGate } from './components/AdminGate';
 import { useBookings } from './hooks/useBookings';
 import { emptyBooking } from './utils/booking';
-
-interface Persona {
-  name: string;
-  initials: string;
-  email: string;
-}
-
-const PERSONAS: Record<Role, Persona> = {
-  rep: { name: 'Ebbe Lund', initials: 'EL', email: 'ebbe.lund@selected.dk' },
-  admin: { name: 'Astrid Holm', initials: 'AH', email: 'astrid.holm@selected.dk' },
-};
+import { personaFromEmail } from './utils/auth';
 
 export default function App() {
   const { bookings, refresh, save, updateStatus, updateNotes } = useBookings();
 
   const [entered, setEntered] = useState(false);
   const [role, setRole] = useState<Role>('rep');
+  const [email, setEmail] = useState('');
+  const [adminAuthed, setAdminAuthed] = useState(false);
+  const [showAdminGate, setShowAdminGate] = useState(false);
   const [nav, setNav] = useState<NavKey>('dashboard');
 
   // Transient flow state
@@ -35,7 +29,10 @@ export default function App() {
   const [confirmation, setConfirmation] = useState<BookingSubmission | null>(null);
   const [drawerId, setDrawerId] = useState<string | null>(null);
 
-  const persona = PERSONAS[role];
+  const persona = useMemo(
+    () => personaFromEmail(email || 'guest@selected'),
+    [email],
+  );
   const drawerBooking = useMemo(
     () => bookings.find((b) => b.submissionId === drawerId) || null,
     [bookings, drawerId],
@@ -58,17 +55,35 @@ export default function App() {
     setNav(key);
   };
 
-  const handleRoleChange = (next: Role) => {
+  const enterRole = (next: Role) => {
     setRole(next);
     setEditing(null);
     setConfirmation(null);
     setNav(next === 'admin' ? 'admin' : 'dashboard');
   };
 
-  const handleEnter = (nextRole: Role) => {
+  const handleRoleChange = (next: Role) => {
+    // HQ / Admin is gated: prompt for the admin password unless already authed.
+    if (next === 'admin' && !adminAuthed) {
+      setShowAdminGate(true);
+      return;
+    }
+    enterRole(next);
+  };
+
+  const handleEnter = (nextRole: Role, nextEmail: string) => {
+    setEmail(nextEmail);
     setRole(nextRole);
+    setAdminAuthed(nextRole === 'admin');
     setNav(nextRole === 'admin' ? 'admin' : 'dashboard');
     setEntered(true);
+  };
+
+  const handleAdminGateSuccess = (adminEmail: string) => {
+    setEmail(adminEmail);
+    setAdminAuthed(true);
+    setShowAdminGate(false);
+    enterRole('admin');
   };
 
   /* ---------- wizard handlers ---------- */
@@ -184,6 +199,13 @@ export default function App() {
         onNotesChange={handleNotesChange}
         onEdit={handleEditFromDrawer}
       />
+      {showAdminGate && (
+        <AdminGate
+          defaultEmail={email}
+          onSuccess={handleAdminGateSuccess}
+          onCancel={() => setShowAdminGate(false)}
+        />
+      )}
     </AppShell>
   );
 }

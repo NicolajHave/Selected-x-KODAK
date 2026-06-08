@@ -1,17 +1,72 @@
 import { describe, expect, it } from 'vitest';
 import { EXPORT_COLUMNS, bookingToRow } from './excel';
-import { SEED_BOOKINGS } from '../data/seed';
+import type { BookingSubmission } from '../types';
+import {
+  emptyBooking,
+  emptyCamera,
+  emptyDigitalPackage,
+  emptyHeroPopup,
+  emptyPartnerInfo,
+  emptyPosPackage,
+} from './booking';
+
+/** Self-contained fixtures so the export logic is tested independent of seed data. */
+function keyAccountHeroPos(): BookingSubmission {
+  return {
+    ...emptyBooking('Ebbe Lund', 'ebbe.lund@selected.dk'),
+    partnerInfo: emptyPartnerInfo({ partnerName: 'Boutique Nord' }),
+    customerType: 'key_account',
+    selectedActivations: ['hero_popup', 'pos_package'],
+    activationDetails: {
+      hero_popup: {
+        ...emptyHeroPopup(),
+        requestedQuantity: '1',
+        preferredDeliveryWindow: 'Wk 14–15',
+        costOwner: 'HQ',
+      },
+      pos_package: { ...emptyPosPackage(), required: 'yes' },
+    },
+  };
+}
+
+function digitalBooking(): BookingSubmission {
+  return {
+    ...emptyBooking('Iiris Salo', 'iiris.salo@selected.fi'),
+    customerType: 'cbo_digital',
+    selectedActivations: ['digital_package'],
+    activationDetails: {
+      digital_package: { ...emptyDigitalPackage(), socialMedibank: true },
+    },
+  };
+}
+
+function cameraBooking(): BookingSubmission {
+  return {
+    ...emptyBooking('Jonas Becker', 'jonas.becker@selected.de'),
+    customerType: 'key_account',
+    selectedActivations: ['camera'],
+    activationDetails: {
+      camera: {
+        ...emptyCamera(),
+        requested: 'yes',
+        cameraType: 'disposable',
+        quantity: '50',
+        purpose: 'consumer_activation',
+      },
+    },
+  };
+}
 
 describe('bookingToRow', () => {
   it('emits a value for every export column', () => {
-    const row = bookingToRow(SEED_BOOKINGS[0]);
+    const row = bookingToRow(keyAccountHeroPos());
     for (const col of EXPORT_COLUMNS) {
       expect(row).toHaveProperty(col);
     }
   });
 
   it('maps a Key Account hero pop-up + POS booking correctly', () => {
-    const row = bookingToRow(SEED_BOOKINGS[0]);
+    const row = bookingToRow(keyAccountHeroPos());
     expect(row['Partner name']).toBe('Boutique Nord');
     expect(row['Customer type']).toBe('Key Account');
     expect(row['Hero pop-up selected']).toBe('Yes');
@@ -23,17 +78,13 @@ describe('bookingToRow', () => {
   });
 
   it('summarises digital package assets', () => {
-    const digital = SEED_BOOKINGS.find((b) =>
-      b.selectedActivations.includes('digital_package'),
-    )!;
-    const row = bookingToRow(digital);
+    const row = bookingToRow(digitalBooking());
     expect(row['Digital package selected']).toBe('Yes');
     expect(row['Digital package requested assets']).toContain('Social content via Medibank');
   });
 
   it('exposes camera details when camera activation is selected', () => {
-    const camera = SEED_BOOKINGS.find((b) => b.selectedActivations.includes('camera'))!;
-    const row = bookingToRow(camera);
+    const row = bookingToRow(cameraBooking());
     expect(row['Camera activation selected']).toBe('Yes');
     expect(row['Camera type']).toBe('Disposable');
     expect(row['Camera quantity']).toBe('50');

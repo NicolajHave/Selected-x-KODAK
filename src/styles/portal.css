@@ -688,6 +688,16 @@
   letter-spacing: -0.01em;
   margin: 6px 0 4px;
 }
+.sk-portal .sk-scrim--center { justify-content: center; align-items: center; padding: 24px; }
+.sk-portal .sk-modal {
+  background: var(--bg-2);
+  box-shadow: var(--sh-modal);
+  border: 1px solid var(--rule-1);
+  border-radius: var(--r-3);
+  width: 100%;
+  max-width: 420px;
+  padding: 28px;
+}
 .sk-portal .sk-statgrid {
   display: flex;
   justify-content: space-between;
@@ -754,6 +764,15 @@
 .sk-portal .sk-login__form { display: flex; align-items: center; justify-content: center; padding: 64px 48px; }
 .sk-portal .sk-login__inner { width: 100%; max-width: 380px; }
 .sk-portal .sk-login__inner h1 { font-size: 36px; margin: 6px 0 28px; }
+.sk-portal .sk-login__error {
+  margin-top: 14px;
+  padding: 10px 12px;
+  border: 1px solid var(--sk-red, #c8472f);
+  border-radius: var(--r-2, 6px);
+  background: rgba(200, 71, 47, 0.06);
+  color: var(--sk-red, #c8472f);
+  font-size: 13px;
+}
 .sk-portal .sk-login__foot {
   border-top: 1px solid var(--rule-1);
   margin-top: 40px;
