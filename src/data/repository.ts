@@ -11,8 +11,8 @@ import type { BookingSubmission } from '../types';
 import { readJSON, writeJSON } from '../utils/storage';
 import { SEED_BOOKINGS } from './seed';
 
-const STORAGE_KEY = 'sk-portal.bookings.v1';
-const SEEDED_FLAG = 'sk-portal.seeded.v1';
+const STORAGE_KEY = 'sk-portal.bookings.v2';
+const SEEDED_FLAG = 'sk-portal.seeded.v2';
 
 export interface BookingRepository {
   list(): BookingSubmission[];
@@ -24,8 +24,9 @@ export interface BookingRepository {
 
 class LocalStorageBookingRepository implements BookingRepository {
   constructor() {
-    // Seed once per browser so the demo has realistic content, but never
-    // re-seed after the user has started editing (even if they clear all rows).
+    // Initialise the store once per browser, but never re-seed after the user
+    // has started editing (even if they clear all rows). SEED_BOOKINGS is empty
+    // in production, so a fresh browser simply starts with no bookings.
     const seeded = readJSON<boolean>(SEEDED_FLAG, false);
     if (!seeded) {
       writeJSON(STORAGE_KEY, SEED_BOOKINGS);

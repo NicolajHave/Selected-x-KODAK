@@ -5,7 +5,7 @@ interface RoleSwitcherProps {
   onChange: (role: Role) => void;
 }
 
-/** Demo-only role selector. Replace with real auth/roles for production. */
+/** Header role selector. Switching to HQ / Admin is gated by the admin sign-in. */
 export function RoleSwitcher({ role, onChange }: RoleSwitcherProps) {
   return (
     <div className="sk-role" role="group" aria-label="Switch role">
