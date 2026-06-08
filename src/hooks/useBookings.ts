@@ -38,5 +38,11 @@ export function useBookings() {
     setBookings(bookingRepository.list());
   }, []);
 
-  return { bookings, refresh, save, updateStatus, updateNotes };
+  /** Permanently delete a booking (e.g. a test record). Not reversible. */
+  const remove = useCallback((id: string) => {
+    bookingRepository.remove(id);
+    setBookings(bookingRepository.list());
+  }, []);
+
+  return { bookings, refresh, save, updateStatus, updateNotes, remove };
 }

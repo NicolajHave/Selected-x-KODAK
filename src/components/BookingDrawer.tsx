@@ -15,6 +15,7 @@ interface BookingDrawerProps {
   onStatusChange: (status: BookingStatus) => void;
   onNotesChange: (notes: string) => void;
   onEdit: (booking: BookingSubmission) => void;
+  onDelete: (booking: BookingSubmission) => void;
 }
 
 /** Slide-over drawer with full booking details + admin status controls. */
@@ -25,6 +26,7 @@ export function BookingDrawer({
   onStatusChange,
   onNotesChange,
   onEdit,
+  onDelete,
 }: BookingDrawerProps) {
   useEffect(() => {
     if (!booking) return;
@@ -175,6 +177,36 @@ export function BookingDrawer({
                 placeholder="Add an internal note…"
               />
             </Field>
+            <div
+              className="sk-spread"
+              style={{
+                alignItems: 'center',
+                marginTop: 18,
+                paddingTop: 14,
+                borderTop: '1px solid var(--rule-1)',
+              }}
+            >
+              <div>
+                <Eyebrow>Danger zone</Eyebrow>
+                <div className="sk-muted" style={{ fontSize: 12, marginTop: 2 }}>
+                  Permanently remove this booking. This cannot be undone.
+                </div>
+              </div>
+              <Button
+                variant="destruct"
+                size="sm"
+                onClick={() => {
+                  const ok = window.confirm(
+                    `Delete booking ${b.submissionId} for ${
+                      p.partnerName || 'this partner'
+                    }? This permanently removes it and cannot be undone.`,
+                  );
+                  if (ok) onDelete(b);
+                }}
+              >
+                Delete booking
+              </Button>
+            </div>
           </>
         )}
 
