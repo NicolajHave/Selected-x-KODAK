@@ -148,44 +148,6 @@ export const ACTIVATION_AVAILABILITY_LABEL: Record<
   hq_funded: 'HQ funded',
 };
 
-/* ---------- Customer types ---------- */
-
-export interface CustomerTypeDef {
-  type: CustomerType;
-  name: string;
-  helper: string;
-}
-
-export const CUSTOMER_TYPES: CustomerTypeDef[] = [
-  {
-    type: 'key_account',
-    name: 'Key Account',
-    helper: 'Suited for larger physical activation.',
-  },
-  {
-    type: 'field_account',
-    name: 'Field Account',
-    helper: 'Suited for scalable retail support.',
-  },
-  {
-    type: 'cbo_digital',
-    name: 'CBO / Digital Partner',
-    helper: 'Suited for digital activation support.',
-  },
-  {
-    type: 'other',
-    name: 'Other / To be reviewed',
-    helper: 'Requires HQ review.',
-  },
-];
-
-export const CUSTOMER_TYPE_LABEL: Record<CustomerType, string> = {
-  key_account: 'Key Account',
-  field_account: 'Field Account',
-  cbo_digital: 'CBO / Digital Partner',
-  other: 'Other / To be reviewed',
-};
-
 /* ---------- Booking status ---------- */
 
 /** Each status maps to one of the design-system badge tones. */
@@ -226,16 +188,28 @@ export const STATUS_BY_KEY: Record<BookingStatus, StatusDef> = STATUSES.reduce(
 
 export const COST_OWNERS: CostOwner[] = ['HQ', 'Market', 'Partner'];
 
+/** Sentinel market value that reveals a free-text field for a custom market. */
+export const MARKET_OTHER = 'OTHER';
+
 export const MARKETS: { value: string; label: string }[] = [
+  { value: 'AT', label: 'Austria (AT)' },
+  { value: 'BE', label: 'Belgium (BE)' },
+  { value: 'CA', label: 'Canada (CA)' },
   { value: 'DK', label: 'Denmark (DK)' },
-  { value: 'NO', label: 'Norway (NO)' },
-  { value: 'SE', label: 'Sweden (SE)' },
   { value: 'FI', label: 'Finland (FI)' },
-  { value: 'DE', label: 'Germany (DE)' },
-  { value: 'NL', label: 'Netherlands (NL)' },
   { value: 'FR', label: 'France (FR)' },
-  { value: 'UK', label: 'United Kingdom (UK)' },
+  { value: 'DE', label: 'Germany (DE)' },
+  { value: 'IE', label: 'Ireland (IE)' },
+  { value: 'IT', label: 'Italy (IT)' },
+  { value: 'NL', label: 'Netherlands (NL)' },
+  { value: 'NO', label: 'Norway (NO)' },
+  { value: 'PT', label: 'Portugal (PT)' },
+  { value: 'SI', label: 'Slovenia (SI)' },
   { value: 'ES', label: 'Spain (ES)' },
+  { value: 'SE', label: 'Sweden (SE)' },
+  { value: 'CH', label: 'Switzerland (CH)' },
+  { value: 'UK', label: 'United Kingdom (UK)' },
+  { value: MARKET_OTHER, label: 'Other' },
 ];
 
 export const MARKET_LABEL: Record<string, string> = MARKETS.reduce(
@@ -245,6 +219,12 @@ export const MARKET_LABEL: Record<string, string> = MARKETS.reduce(
   },
   {} as Record<string, string>,
 );
+
+/** Display the market, resolving the free-text value when "Other" is chosen. */
+export function marketDisplay(p: { market: string; marketOther?: string }): string {
+  if (p.market === MARKET_OTHER) return p.marketOther?.trim() || 'Other';
+  return MARKET_LABEL[p.market] || p.market;
+}
 
 export const CAMERA_PURPOSE_LABEL: Record<string, string> = {
   staff_activation: 'Staff activation',
@@ -264,11 +244,3 @@ export const CAMPAIGN_FORMAT_LABEL: Record<string, string> = {
   print_element: 'Print element',
   other: 'Other',
 };
-
-export const DIGITAL_ASSET_LABELS: { key: string; label: string }[] = [
-  { key: 'socialMedibank', label: 'Social content via Medibank' },
-  { key: 'newsletterAssets', label: 'Newsletter assets' },
-  { key: 'productHighlight', label: 'Product highlight assets' },
-  { key: 'campaignImagery', label: 'Campaign imagery' },
-  { key: 'storytellingModule', label: 'Digital storytelling module' },
-];

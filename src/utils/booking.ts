@@ -20,7 +20,7 @@ export function emptyPartnerInfo(
     partnerName: '',
     customerNumber: '',
     market: '',
-    country: '',
+    marketOther: '',
     region: '',
     storeName: '',
     city: '',
@@ -37,15 +37,12 @@ export const emptyHeroPopup = (): HeroPopupDetails => ({
   requestedQuantity: '',
   preferredDeliveryWindow: '',
   storePlacementNotes: '',
-  doubleSided: '',
-  costOwner: '',
   notes: '',
 });
 
 export const emptyCampaignElement = (): CampaignElementDetails => ({
   requestedQuantity: '',
   preferredFormat: '',
-  costOwner: '',
   notes: '',
 });
 
@@ -55,12 +52,7 @@ export const emptyPosPackage = (): PosPackageDetails => ({
 });
 
 export const emptyDigitalPackage = (): DigitalPackageDetails => ({
-  socialMedibank: false,
-  newsletterAssets: false,
-  productHighlight: false,
-  campaignImagery: false,
-  storytellingModule: false,
-  partnerPlatform: '',
+  deliveryEmail: '',
   goLivePeriod: '',
   notes: '',
 });
@@ -69,7 +61,6 @@ export const emptySpinWin = (): SpinWinDetails => ({
   requested: '',
   prizeType: '',
   estimatedEventPeriod: '',
-  costOwner: '',
   notes: '',
 });
 
@@ -85,7 +76,6 @@ export const emptyCatering = (): CateringDetails => ({
   requested: '',
   eventPeriod: '',
   estimatedGuests: '',
-  costOwner: '',
   notes: '',
 });
 
@@ -115,16 +105,18 @@ export function generateSubmissionId(): string {
   return `SUB-2027-00${n}`;
 }
 
-/** A blank booking owned by the given rep persona. */
+/**
+ * A blank booking. `createdBy` records who started it (internal), and the rep
+ * email pre-fills the matching field; the rep name is left empty so the rep
+ * enters it themselves rather than seeing a guessed name pre-filled.
+ */
 export function emptyBooking(createdBy: string, repEmail: string): BookingSubmission {
   const now = new Date().toISOString();
   return {
     submissionId: generateSubmissionId(),
     partnerInfo: emptyPartnerInfo({
-      salesRepName: createdBy,
       salesRepEmail: repEmail,
     }),
-    customerType: '',
     selectedActivations: [],
     activationDetails: {},
     status: 'draft',

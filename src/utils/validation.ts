@@ -6,7 +6,7 @@
  * booking may leave draft state.
  */
 import type { BookingSubmission } from '../types';
-import { ACTIVATION_BY_TYPE } from '../data/catalog';
+import { ACTIVATION_BY_TYPE, MARKET_OTHER } from '../data/catalog';
 
 export type Errors = Record<string, string>;
 
@@ -17,6 +17,9 @@ export function validatePartner(b: BookingSubmission): Errors {
   const p = b.partnerInfo;
   if (!p.partnerName.trim()) e.partnerName = 'This field is needed before you can submit.';
   if (!p.market.trim()) e.market = 'This field is needed before you can submit.';
+  if (p.market === MARKET_OTHER && !p.marketOther.trim()) {
+    e.marketOther = 'Enter the market name.';
+  }
   if (!p.salesRepName.trim()) e.salesRepName = 'This field is needed before you can submit.';
   if (!p.salesRepEmail.trim()) {
     e.salesRepEmail = 'This field is needed before you can submit.';
@@ -29,12 +32,6 @@ export function validatePartner(b: BookingSubmission): Errors {
   return e;
 }
 
-export function validateCustomerType(b: BookingSubmission): Errors {
-  const e: Errors = {};
-  if (!b.customerType) e.customerType = 'Select a customer type to continue.';
-  return e;
-}
-
 export function validateSelection(b: BookingSubmission): Errors {
   const e: Errors = {};
   if (b.selectedActivations.length === 0) {
@@ -43,7 +40,7 @@ export function validateSelection(b: BookingSubmission): Errors {
   return e;
 }
 
-/** Validate the per-activation detail blocks (quantity + cost owner rules). */
+/** Validate the per-activation detail blocks (quantity rules). */
 export function validateDetails(b: BookingSubmission): Errors {
   const e: Errors = {};
   for (const type of b.selectedActivations) {
@@ -55,10 +52,6 @@ export function validateDetails(b: BookingSubmission): Errors {
         e[`${type}.quantity`] = 'Quantity is required for this activation.';
       }
     }
-    if (def.needsCostOwner) {
-      const owner = d?.costOwner as string | undefined;
-      if (!owner) e[`${type}.costOwner`] = 'Cost owner is required for this activation.';
-    }
   }
   return e;
 }
@@ -67,7 +60,6 @@ export function validateDetails(b: BookingSubmission): Errors {
 export function validateForSubmit(b: BookingSubmission): Errors {
   return {
     ...validatePartner(b),
-    ...validateCustomerType(b),
     ...validateSelection(b),
     ...validateDetails(b),
   };

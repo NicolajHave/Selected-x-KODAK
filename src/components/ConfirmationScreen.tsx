@@ -1,5 +1,5 @@
 import type { BookingSubmission } from '../types';
-import { CUSTOMER_TYPE_LABEL, MARKET_LABEL } from '../data/catalog';
+import { marketDisplay } from '../data/catalog';
 import { Eyebrow } from './ui/Eyebrow';
 import { Button } from './ui/Button';
 import { orDash } from '../utils/format';
@@ -31,11 +31,8 @@ export function ConfirmationScreen({ booking, onNew, onHome, onView }: Confirmat
       <div className="sk-confirm__facts">
         {[
           ['Partner', booking.partnerInfo.partnerName],
-          ['Market', MARKET_LABEL[booking.partnerInfo.market] || booking.partnerInfo.market],
-          [
-            'Customer type',
-            booking.customerType ? CUSTOMER_TYPE_LABEL[booking.customerType] : '',
-          ],
+          ['Market', marketDisplay(booking.partnerInfo)],
+          ['Activations', String(booking.selectedActivations.length)],
         ].map(([k, v]) => (
           <div key={k} className="sk-confirm__fact">
             <Eyebrow>{k}</Eyebrow>

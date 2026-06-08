@@ -12,12 +12,11 @@ export function activationCodes(b: BookingSubmission): string {
   return b.selectedActivations.map((t) => ACTIVATION_BY_TYPE[t].code).join(', ');
 }
 
-/** The cost owners in play across the booking, de-duplicated. */
+/** The cost owners in play across the booking, derived from the catalog. */
 export function costOwners(b: BookingSubmission): string {
   const owners = new Set<string>();
   for (const t of b.selectedActivations) {
-    const d = b.activationDetails[t] as { costOwner?: string } | undefined;
-    owners.add(d?.costOwner || ACTIVATION_BY_TYPE[t].costOwner);
+    owners.add(ACTIVATION_BY_TYPE[t].costOwner);
   }
   return [...owners].filter(Boolean).join(' · ');
 }

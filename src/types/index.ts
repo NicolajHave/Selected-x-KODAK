@@ -56,7 +56,8 @@ export interface PartnerInfo {
   partnerName: string;
   customerNumber: string;
   market: string;
-  country: string;
+  /** Free-text market name, used only when `market === 'OTHER'`. */
+  marketOther: string;
   region: string;
   storeName: string;
   city: string;
@@ -76,15 +77,12 @@ export interface HeroPopupDetails {
   requestedQuantity: string;
   preferredDeliveryWindow: string;
   storePlacementNotes: string;
-  doubleSided: YesNo | '';
-  costOwner: CostOwner | '';
   notes: string;
 }
 
 export interface CampaignElementDetails {
   requestedQuantity: string;
   preferredFormat: 'mini_zigzag' | 'print_element' | 'other' | '';
-  costOwner: CostOwner | '';
   notes: string;
 }
 
@@ -94,12 +92,8 @@ export interface PosPackageDetails {
 }
 
 export interface DigitalPackageDetails {
-  socialMedibank: boolean;
-  newsletterAssets: boolean;
-  productHighlight: boolean;
-  campaignImagery: boolean;
-  storytellingModule: boolean;
-  partnerPlatform: string;
+  /** Email address the full digital asset package should be sent to. */
+  deliveryEmail: string;
   goLivePeriod: string;
   notes: string;
 }
@@ -108,7 +102,6 @@ export interface SpinWinDetails {
   requested: YesNo | '';
   prizeType: string;
   estimatedEventPeriod: string;
-  costOwner: Extract<CostOwner, 'Market' | 'Partner'> | '';
   notes: string;
 }
 
@@ -129,7 +122,6 @@ export interface CateringDetails {
   requested: YesNo | '';
   eventPeriod: string;
   estimatedGuests: string;
-  costOwner: Extract<CostOwner, 'Market' | 'Partner'> | '';
   notes: string;
 }
 
@@ -148,7 +140,6 @@ export interface ActivationDetails {
 export interface BookingSubmission {
   submissionId: string;
   partnerInfo: PartnerInfo;
-  customerType: CustomerType | '';
   selectedActivations: ActivationSelection;
   activationDetails: ActivationDetails;
   status: BookingStatus;

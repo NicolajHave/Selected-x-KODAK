@@ -336,14 +336,14 @@
   flex-wrap: wrap;
 }
 .sk-portal .sk-selcard__media {
-  height: 120px;
+  height: 220px;
   margin: -20px -20px 14px;
   border-bottom: 1px solid var(--rule-1);
-  background-size: cover;
+  background-size: contain;
+  background-repeat: no-repeat;
   background-position: center;
   background-color: var(--sk-steel-light);
   border-radius: var(--r-3) var(--r-3) 0 0;
-  filter: grayscale(0.15);
 }
 .sk-portal .sk-tick {
   width: 18px;

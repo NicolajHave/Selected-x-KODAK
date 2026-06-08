@@ -1,5 +1,4 @@
 import type { BookingSubmission } from '../types';
-import { CUSTOMER_TYPE_LABEL } from '../data/catalog';
 import { StatusBadge } from './StatusBadge';
 import { formatDate, orDash } from '../utils/format';
 import {
@@ -32,10 +31,8 @@ export function BookingTable({ bookings, onOpen, variant = 'rep' }: BookingTable
               <th>Partner</th>
               <th>Customer no.</th>
               <th>Market</th>
-              <th>Country</th>
               <th>Region</th>
               <th>Sales rep</th>
-              <th>Customer type</th>
               <th>Activations</th>
               <th className="sk-num">Qty</th>
               <th>Cost owner</th>
@@ -53,10 +50,8 @@ export function BookingTable({ bookings, onOpen, variant = 'rep' }: BookingTable
                 <td className="sk-strong">{b.partnerInfo.partnerName}</td>
                 <td className="sk-id">{orDash(b.partnerInfo.customerNumber)}</td>
                 <td>{b.partnerInfo.market}</td>
-                <td>{orDash(b.partnerInfo.country)}</td>
                 <td>{orDash(b.partnerInfo.region)}</td>
                 <td>{b.partnerInfo.salesRepName}</td>
-                <td>{b.customerType ? CUSTOMER_TYPE_LABEL[b.customerType] : '—'}</td>
                 <td title={activationNames(b).join(', ')}>
                   <span className="sk-mono" style={{ fontSize: 12 }}>
                     {orDash(activationCodes(b))}
@@ -96,7 +91,6 @@ export function BookingTable({ bookings, onOpen, variant = 'rep' }: BookingTable
             <th>ID</th>
             <th>Partner</th>
             <th>Market</th>
-            <th>Customer type</th>
             <th>Activations</th>
             <th>Updated</th>
             <th>Status</th>
@@ -108,7 +102,6 @@ export function BookingTable({ bookings, onOpen, variant = 'rep' }: BookingTable
               <td className="sk-id">{b.submissionId}</td>
               <td className="sk-strong">{b.partnerInfo.partnerName || 'Untitled partner'}</td>
               <td>{orDash(b.partnerInfo.market)}</td>
-              <td>{b.customerType ? CUSTOMER_TYPE_LABEL[b.customerType] : '—'}</td>
               <td className="sk-mono" style={{ fontSize: 12 }}>
                 {orDash(activationCodes(b))}
               </td>

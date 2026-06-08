@@ -17,9 +17,7 @@ interface AdminOverviewProps {
 function matches(b: BookingSubmission, f: BookingFilters): boolean {
   if (f.status && b.status !== f.status) return false;
   if (f.market && b.partnerInfo.market !== f.market) return false;
-  if (f.country && b.partnerInfo.country !== f.country) return false;
   if (f.salesRep && b.partnerInfo.salesRepName !== f.salesRep) return false;
-  if (f.customerType && b.customerType !== f.customerType) return false;
   if (f.activation && !b.selectedActivations.includes(f.activation as never)) return false;
   if (f.search) {
     const q = f.search.toLowerCase();
@@ -42,10 +40,6 @@ export function AdminOverview({ bookings, onOpen, onRefresh }: AdminOverviewProp
 
   const markets = useMemo(
     () => [...new Set(bookings.map((b) => b.partnerInfo.market).filter(Boolean))].sort(),
-    [bookings],
-  );
-  const countries = useMemo(
-    () => [...new Set(bookings.map((b) => b.partnerInfo.country).filter(Boolean))].sort(),
     [bookings],
   );
   const reps = useMemo(
@@ -117,13 +111,7 @@ export function AdminOverview({ bookings, onOpen, onRefresh }: AdminOverviewProp
         ))}
       </div>
 
-      <FilterBar
-        filters={filters}
-        onChange={setFilters}
-        markets={markets}
-        countries={countries}
-        reps={reps}
-      />
+      <FilterBar filters={filters} onChange={setFilters} markets={markets} reps={reps} />
 
       <BookingTable bookings={filtered} onOpen={onOpen} variant="admin" />
     </div>

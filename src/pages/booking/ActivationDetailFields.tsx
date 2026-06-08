@@ -9,9 +9,9 @@ import type {
   PosPackageDetails,
   SpinWinDetails,
 } from '../../types';
-import { ACTIVATION_BY_TYPE, COST_OWNERS, DIGITAL_ASSET_LABELS } from '../../data/catalog';
+import { ACTIVATION_BY_TYPE } from '../../data/catalog';
 import { FormSection } from '../../components/FormSection';
-import { Field, RadioGroup, Select, Textarea, TextInput, Checkbox } from '../../components/ui/Field';
+import { Field, RadioGroup, Select, Textarea, TextInput } from '../../components/ui/Field';
 import type { Errors } from '../../utils/validation';
 
 type SetDetail = (type: ActivationType, field: string, value: unknown) => void;
@@ -25,12 +25,6 @@ interface DetailProps {
 const YES_NO = [
   { value: 'yes', label: 'Yes' },
   { value: 'no', label: 'No' },
-];
-
-const COST_OWNER_OPTIONS = COST_OWNERS.map((o) => ({ value: o, label: o }));
-const MARKET_PARTNER_OPTIONS = [
-  { value: 'Market', label: 'Market' },
-  { value: 'Partner', label: 'Partner' },
 ];
 
 /** Renders the detail block for one selected activation. */
@@ -63,13 +57,13 @@ export function ActivationDetailBlock({ type, booking, setDetail, errors }: Deta
           />
         )}
         {type === 'spin_win' && (
-          <SpinFields d={(booking.activationDetails.spin_win || {}) as SpinWinDetails} set={set} errors={errors} />
+          <SpinFields d={(booking.activationDetails.spin_win || {}) as SpinWinDetails} set={set} />
         )}
         {type === 'camera' && (
           <CameraFields d={(booking.activationDetails.camera || {}) as CameraDetails} set={set} errors={errors} />
         )}
         {type === 'catering' && (
-          <CateringFields d={(booking.activationDetails.catering || {}) as CateringDetails} set={set} errors={errors} />
+          <CateringFields d={(booking.activationDetails.catering || {}) as CateringDetails} set={set} />
         )}
       </FormSection>
     </div>
@@ -106,14 +100,8 @@ function HeroFields({
             placeholder="e.g. Wk 14–15"
           />
         </Field>
-        <Field label="Double-sided setup needed">
-          <RadioGroup value={d.doubleSided || ''} onChange={(v) => set('doubleSided', v)} options={YES_NO} />
-        </Field>
       </div>
       <div>
-        <Field label="Cost owner" required error={errors['hero_popup.costOwner']}>
-          <RadioGroup value={d.costOwner || ''} onChange={(v) => set('costOwner', v)} options={COST_OWNER_OPTIONS} />
-        </Field>
         <Field label="Store placement notes">
           <Textarea
             value={d.storePlacementNotes || ''}
@@ -164,9 +152,6 @@ function CampaignFields({
         </Field>
       </div>
       <div>
-        <Field label="Cost owner" required error={errors['campaign_element.costOwner']}>
-          <RadioGroup value={d.costOwner || ''} onChange={(v) => set('costOwner', v)} options={COST_OWNER_OPTIONS} />
-        </Field>
         <Field label="Notes">
           <Textarea value={d.notes || ''} onChange={(v) => set('notes', v)} rows={2} />
         </Field>
@@ -202,28 +187,21 @@ function DigitalFields({
   return (
     <div className="sk-formgrid">
       <div>
-        <Field label="Requested assets">
-          <div>
-            {DIGITAL_ASSET_LABELS.map((a) => (
-              <div key={a.key}>
-                <Checkbox
-                  checked={!!(d as unknown as Record<string, boolean>)[a.key]}
-                  onChange={(v) => set(a.key, v)}
-                  label={a.label}
-                />
-              </div>
-            ))}
-          </div>
+        <p className="sk-muted" style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 4 }}>
+          The full digital asset package is included — social content via Medibank, newsletter
+          assets, campaign imagery and the storytelling module. Just tell us where to send it.
+        </p>
+        <Field label="Delivery email" required hint="Where we send the digital material.">
+          <TextInput
+            value={d.deliveryEmail || ''}
+            onChange={(v) => set('deliveryEmail', v)}
+            type="email"
+            inputMode="email"
+            placeholder="e.g. marketing@partner.com"
+          />
         </Field>
       </div>
       <div>
-        <Field label="Partner platform / usage">
-          <TextInput
-            value={d.partnerPlatform || ''}
-            onChange={(v) => set('partnerPlatform', v)}
-            placeholder="e.g. Instagram + owned newsletter"
-          />
-        </Field>
         <Field label="Go-live period">
           <TextInput
             value={d.goLivePeriod || ''}
@@ -242,11 +220,9 @@ function DigitalFields({
 function SpinFields({
   d,
   set,
-  errors,
 }: {
   d: SpinWinDetails;
   set: (f: string, v: unknown) => void;
-  errors: Errors;
 }) {
   return (
     <div className="sk-formgrid">
@@ -261,20 +237,13 @@ function SpinFields({
             placeholder="e.g. Disposable camera + totebag"
           />
         </Field>
+      </div>
+      <div>
         <Field label="Estimated event period">
           <TextInput
             value={d.estimatedEventPeriod || ''}
             onChange={(v) => set('estimatedEventPeriod', v)}
             placeholder="e.g. June 2026"
-          />
-        </Field>
-      </div>
-      <div>
-        <Field label="Cost owner" required error={errors['spin_win.costOwner']}>
-          <RadioGroup
-            value={d.costOwner || ''}
-            onChange={(v) => set('costOwner', v)}
-            options={MARKET_PARTNER_OPTIONS}
           />
         </Field>
         <Field label="Notes">
@@ -347,11 +316,9 @@ function CameraFields({
 function CateringFields({
   d,
   set,
-  errors,
 }: {
   d: CateringDetails;
   set: (f: string, v: unknown) => void;
-  errors: Errors;
 }) {
   return (
     <div className="sk-formgrid">
@@ -366,21 +333,14 @@ function CateringFields({
             placeholder="e.g. 2026-05-22 or May 2026"
           />
         </Field>
+      </div>
+      <div>
         <Field label="Estimated number of guests">
           <TextInput
             value={d.estimatedGuests || ''}
             onChange={(v) => set('estimatedGuests', v)}
             placeholder="e.g. 80"
             inputMode="numeric"
-          />
-        </Field>
-      </div>
-      <div>
-        <Field label="Cost owner" required error={errors['catering.costOwner']}>
-          <RadioGroup
-            value={d.costOwner || ''}
-            onChange={(v) => set('costOwner', v)}
-            options={MARKET_PARTNER_OPTIONS}
           />
         </Field>
         <Field label="Notes">

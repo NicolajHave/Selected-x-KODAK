@@ -1,11 +1,6 @@
 import { useEffect } from 'react';
 import type { BookingStatus, BookingSubmission, Role } from '../types';
-import {
-  ACTIVATION_BY_TYPE,
-  CUSTOMER_TYPE_LABEL,
-  MARKET_LABEL,
-  STATUSES,
-} from '../data/catalog';
+import { ACTIVATION_BY_TYPE, marketDisplay, STATUSES } from '../data/catalog';
 import { Eyebrow } from './ui/Eyebrow';
 import { Button } from './ui/Button';
 import { StatusBadge } from './StatusBadge';
@@ -61,17 +56,15 @@ export function BookingDrawer({
         </div>
         <div className="sk-drawer__title">{p.partnerName || 'Untitled partner'}</div>
         <div className="sk-muted" style={{ fontSize: 13 }}>
-          {[MARKET_LABEL[p.market] || p.market, p.salesRepName, formatDate(b.createdAt)]
+          {[marketDisplay(p), p.salesRepName, formatDate(b.createdAt)]
             .filter(Boolean)
             .join(' · ')}
         </div>
 
         <div className="sk-statgrid">
           <div>
-            <Eyebrow>Customer type</Eyebrow>
-            <div style={{ fontSize: 13, marginTop: 4 }}>
-              {b.customerType ? CUSTOMER_TYPE_LABEL[b.customerType] : '—'}
-            </div>
+            <Eyebrow>Market</Eyebrow>
+            <div style={{ fontSize: 13, marginTop: 4 }}>{marketDisplay(p)}</div>
           </div>
           <div>
             <Eyebrow>Activations</Eyebrow>
@@ -93,7 +86,6 @@ export function BookingDrawer({
           {[
             ['Customer number', p.customerNumber],
             ['Region', p.region],
-            ['Country', p.country],
             ['City', p.city],
             ['Store / door', p.storeName],
             ['Sales rep email', p.salesRepEmail],
