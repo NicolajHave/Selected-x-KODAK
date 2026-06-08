@@ -1,10 +1,10 @@
 /** Turn an activation's detail block into label/value pairs for display. */
 import type { ActivationType, BookingSubmission } from '../types';
 import {
+  ACTIVATION_BY_TYPE,
   CAMERA_PURPOSE_LABEL,
   CAMERA_TYPE_LABEL,
   CAMPAIGN_FORMAT_LABEL,
-  DIGITAL_ASSET_LABELS,
 } from '../data/catalog';
 import { yesNo } from './format';
 
@@ -27,8 +27,7 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
         { label: 'Requested quantity', value: d.requestedQuantity },
         { label: 'Delivery window', value: d.preferredDeliveryWindow },
         { label: 'Placement notes', value: d.storePlacementNotes },
-        { label: 'Double-sided', value: d.doubleSided ? yesNo(d.doubleSided) : '' },
-        { label: 'Cost owner', value: d.costOwner },
+        { label: 'Cost owner', value: ACTIVATION_BY_TYPE.hero_popup.costOwner },
         { label: 'Notes', value: d.notes },
       ]);
     }
@@ -41,7 +40,7 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
           label: 'Format',
           value: d.preferredFormat ? CAMPAIGN_FORMAT_LABEL[d.preferredFormat] : '',
         },
-        { label: 'Cost owner', value: d.costOwner },
+        { label: 'Cost owner', value: ACTIVATION_BY_TYPE.campaign_element.costOwner },
         { label: 'Notes', value: d.notes },
       ]);
     }
@@ -56,14 +55,9 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
     case 'digital_package': {
       const d = det.digital_package;
       if (!d) return [];
-      const assets = DIGITAL_ASSET_LABELS.filter(
-        (a) => (d as unknown as Record<string, boolean>)[a.key],
-      )
-        .map((a) => a.label)
-        .join(', ');
       return clean([
-        { label: 'Requested assets', value: assets },
-        { label: 'Partner platform / usage', value: d.partnerPlatform },
+        { label: 'Package', value: 'Full digital asset package' },
+        { label: 'Delivery email', value: d.deliveryEmail },
         { label: 'Go-live period', value: d.goLivePeriod },
         { label: 'Notes', value: d.notes },
       ]);
@@ -75,7 +69,7 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
         { label: 'Requested', value: d.requested ? yesNo(d.requested) : '' },
         { label: 'Prize type', value: d.prizeType },
         { label: 'Estimated event period', value: d.estimatedEventPeriod },
-        { label: 'Cost owner', value: d.costOwner },
+        { label: 'Cost owner', value: ACTIVATION_BY_TYPE.spin_win.costOwner },
         { label: 'Notes', value: d.notes },
       ]);
     }
@@ -97,7 +91,7 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
         { label: 'Requested', value: d.requested ? yesNo(d.requested) : '' },
         { label: 'Event date / period', value: d.eventPeriod },
         { label: 'Estimated guests', value: d.estimatedGuests },
-        { label: 'Cost owner', value: d.costOwner },
+        { label: 'Cost owner', value: ACTIVATION_BY_TYPE.catering.costOwner },
         { label: 'Notes', value: d.notes },
       ]);
     }

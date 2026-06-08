@@ -7,25 +7,17 @@
 import * as XLSX from 'xlsx';
 import type { BookingSubmission } from '../types';
 import {
+  ACTIVATION_BY_TYPE,
   CAMERA_PURPOSE_LABEL,
   CAMERA_TYPE_LABEL,
   CAMPAIGN_FORMAT_LABEL,
   CUSTOMER_TYPE_LABEL,
-  DIGITAL_ASSET_LABELS,
-  MARKET_LABEL,
+  marketDisplay,
   STATUS_BY_KEY,
 } from '../data/catalog';
 import { formatDate, todayStamp, yesNo } from './format';
 
 type Row = Record<string, string>;
-
-function digitalAssetSummary(b: BookingSubmission): string {
-  const d = b.activationDetails.digital_package;
-  if (!d) return '';
-  return DIGITAL_ASSET_LABELS.filter((a) => (d as unknown as Record<string, boolean>)[a.key])
-    .map((a) => a.label)
-    .join('; ');
-}
 
 function cateringScope(b: BookingSubmission): string {
   const d = b.activationDetails.catering;
@@ -39,19 +31,23 @@ function cateringScope(b: BookingSubmission): string {
 /** Map a booking to a flat, export-shaped row keyed by column header. */
 export function bookingToRow(b: BookingSubmission): Row {
   const p = b.partnerInfo;
-  const sel = (t: BookingSubmission['selectedActivations'][number]) =>
-    yesNo(b.selectedActivations.includes(t));
+  const has = (t: BookingSubmission['selectedActivations'][number]) =>
+    b.selectedActivations.includes(t);
+  const sel = (t: BookingSubmission['selectedActivations'][number]) => yesNo(has(t));
+  /** Catalog cost owner, only when the activation is selected. */
+  const owner = (t: BookingSubmission['selectedActivations'][number]) =>
+    has(t) ? ACTIVATION_BY_TYPE[t].costOwner : '';
 
   const hero = b.activationDetails.hero_popup;
   const campaign = b.activationDetails.campaign_element;
-  const spin = b.activationDetails.spin_win;
   const camera = b.activationDetails.camera;
+  const digital = b.activationDetails.digital_package;
 
   return {
     'Submission ID': b.submissionId,
     'Partner name': p.partnerName,
     'Customer number': p.customerNumber,
-    Market: MARKET_LABEL[p.market] || p.market,
+    Market: marketDisplay(p),
     Country: p.country,
     Region: p.region,
     'Store / door name': p.storeName,
@@ -65,22 +61,22 @@ export function bookingToRow(b: BookingSubmission): Row {
 
     'Hero pop-up selected': sel('hero_popup'),
     'Hero pop-up quantity': hero?.requestedQuantity || '',
-    'Hero pop-up cost owner': hero?.costOwner || '',
+    'Hero pop-up cost owner': owner('hero_popup'),
 
     'Campaign element selected': sel('campaign_element'),
     'Campaign element quantity': campaign?.requestedQuantity || '',
     'Campaign element format': campaign?.preferredFormat
       ? CAMPAIGN_FORMAT_LABEL[campaign.preferredFormat] || campaign.preferredFormat
       : '',
-    'Campaign element cost owner': campaign?.costOwner || '',
+    'Campaign element cost owner': owner('campaign_element'),
 
     'POS package selected': sel('pos_package'),
 
     'Digital package selected': sel('digital_package'),
-    'Digital package requested assets': digitalAssetSummary(b),
+    'Digital package delivery email': digital?.deliveryEmail || '',
 
     'Spin & Win selected': sel('spin_win'),
-    'Spin & Win cost owner': spin?.costOwner || '',
+    'Spin & Win cost owner': owner('spin_win'),
 
     'Camera activation selected': sel('camera'),
     'Camera type': camera?.cameraType
@@ -127,7 +123,7 @@ export const EXPORT_COLUMNS: string[] = [
   'Campaign element cost owner',
   'POS package selected',
   'Digital package selected',
-  'Digital package requested assets',
+  'Digital package delivery email',
   'Spin & Win selected',
   'Spin & Win cost owner',
   'Camera activation selected',

@@ -1,9 +1,5 @@
 import type { BookingSubmission } from '../types';
-import {
-  ACTIVATION_BY_TYPE,
-  CUSTOMER_TYPE_LABEL,
-  MARKET_LABEL,
-} from '../data/catalog';
+import { ACTIVATION_BY_TYPE, marketDisplay } from '../data/catalog';
 import { Eyebrow } from './ui/Eyebrow';
 import { orDash } from '../utils/format';
 import { costOwners, deliveryWindow, quantityLabel } from '../utils/summary';
@@ -23,7 +19,7 @@ export function ReviewSummary({ booking: b }: ReviewSummaryProps) {
           {p.partnerName || '—'}
         </div>
         <div className="sk-muted" style={{ fontSize: 13, marginTop: 4 }}>
-          {[MARKET_LABEL[p.market] || p.market, p.city, p.storeName].filter(Boolean).join(' · ') ||
+          {[marketDisplay(p), p.city, p.storeName].filter(Boolean).join(' · ') ||
             'Location not set'}
         </div>
 
@@ -32,8 +28,8 @@ export function ReviewSummary({ booking: b }: ReviewSummaryProps) {
           <div className="sk-deflist" style={{ marginTop: 12 }}>
             {[
               ['Customer number', p.customerNumber],
+              ['Market', marketDisplay(p)],
               ['Region', p.region],
-              ['Country', p.country],
               ['City', p.city],
               ['Sales rep', p.salesRepName],
               ['Sales rep email', p.salesRepEmail],
@@ -72,9 +68,7 @@ export function ReviewSummary({ booking: b }: ReviewSummaryProps) {
             )}
             {b.selectedActivations.map((t) => {
               const def = ACTIVATION_BY_TYPE[t];
-              const d = b.activationDetails[t] as
-                | { costOwner?: string; notes?: string }
-                | undefined;
+              const d = b.activationDetails[t] as { notes?: string } | undefined;
               const qty = quantityLabel(b, t);
               return (
                 <div key={t} className="sk-review-line">
@@ -95,7 +89,7 @@ export function ReviewSummary({ booking: b }: ReviewSummaryProps) {
                       letterSpacing: '0.08em',
                     }}
                   >
-                    {d?.costOwner || def.costOwner}
+                    {def.costOwner}
                   </span>
                 </div>
               );
@@ -109,7 +103,6 @@ export function ReviewSummary({ booking: b }: ReviewSummaryProps) {
           <Eyebrow size="lg">Summary</Eyebrow>
           <div style={{ marginTop: 14 }}>
             {[
-              ['Customer type', b.customerType ? CUSTOMER_TYPE_LABEL[b.customerType] : '—'],
               ['Activations', String(b.selectedActivations.length)],
               ['Cost owners', orDash(costOwners(b))],
               ['Delivery window', orDash(deliveryWindow(b))],

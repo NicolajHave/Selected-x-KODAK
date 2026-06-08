@@ -2,32 +2,28 @@ import { useState } from 'react';
 import type {
   ActivationType,
   BookingSubmission,
-  CustomerType,
   PartnerInfo,
 } from '../types';
-import { ACTIVATIONS, CUSTOMER_TYPES, MARKETS } from '../data/catalog';
+import { ACTIVATIONS, MARKETS, MARKET_OTHER } from '../data/catalog';
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 import { StepProgress } from '../components/StepProgress';
 import { Field, Select, Textarea, TextInput } from '../components/ui/Field';
-import { CustomerTypeCard } from '../components/CustomerTypeCard';
 import { ActivationCard } from '../components/ActivationCard';
 import { ReviewSummary } from '../components/ReviewSummary';
 import { ActivationDetailBlock } from './booking/ActivationDetailFields';
 import { emptyDetailFor } from '../utils/booking';
 import {
   hasErrors,
-  validateCustomerType,
   validateDetails,
   validatePartner,
   validateSelection,
   type Errors,
 } from '../utils/validation';
 
-const STEP_LABELS = ['Partner', 'Customer', 'Activations', 'Details', 'Review'];
+const STEP_LABELS = ['Partner', 'Activations', 'Details', 'Review'];
 const STEP_TITLES = [
   'Partner information',
-  'Customer type',
   'Activation selection',
   'Activation details',
   'Review & submit',
@@ -48,9 +44,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
   /* ---------- mutators ---------- */
   const setPartner = (field: keyof PartnerInfo, value: string) =>
     setBooking((b) => ({ ...b, partnerInfo: { ...b.partnerInfo, [field]: value } }));
-
-  const setCustomerType = (type: CustomerType) =>
-    setBooking((b) => ({ ...b, customerType: type }));
 
   const toggleActivation = (type: ActivationType) =>
     setBooking((b) => {
@@ -82,12 +75,7 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
     });
 
   /* ---------- step validation ---------- */
-  const stepValidators = [
-    validatePartner,
-    validateCustomerType,
-    validateSelection,
-    validateDetails,
-  ];
+  const stepValidators = [validatePartner, validateSelection, validateDetails];
 
   const goNext = () => {
     const validator = stepValidators[step];
@@ -116,7 +104,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
   const handleSubmit = () => {
     const all = {
       ...validatePartner(booking),
-      ...validateCustomerType(booking),
       ...validateSelection(booking),
       ...validateDetails(booking),
     };
@@ -124,9 +111,8 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
       setErrors(all);
       // jump back to the earliest failing step so the user can fix it
       if (Object.keys(validatePartner(booking)).length) setStep(0);
-      else if (Object.keys(validateCustomerType(booking)).length) setStep(1);
-      else if (Object.keys(validateSelection(booking)).length) setStep(2);
-      else setStep(3);
+      else if (Object.keys(validateSelection(booking)).length) setStep(1);
+      else setStep(2);
       return;
     }
     onSubmit(booking);
@@ -177,13 +163,16 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
                 placeholder="Select market…"
               />
             </Field>
-            <Field label="Country">
-              <TextInput
-                value={booking.partnerInfo.country}
-                onChange={(v) => setPartner('country', v)}
-                placeholder="e.g. Denmark"
-              />
-            </Field>
+            {booking.partnerInfo.market === MARKET_OTHER && (
+              <Field label="Market name" required error={errors.marketOther}>
+                <TextInput
+                  value={booking.partnerInfo.marketOther}
+                  onChange={(v) => setPartner('marketOther', v)}
+                  placeholder="e.g. Ireland"
+                  invalid={!!errors.marketOther}
+                />
+              </Field>
+            )}
             <Field label="Region">
               <TextInput
                 value={booking.partnerInfo.region}
@@ -250,33 +239,8 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
         </div>
       )}
 
-      {/* ---------- Step 2: Customer type ---------- */}
+      {/* ---------- Step 2: Activation selection ---------- */}
       {step === 1 && (
-        <div>
-          <p className="sk-muted" style={{ marginBottom: 24, maxWidth: 560 }}>
-            Choose the classification that best fits this partner. It guides which activations are
-            recommended.
-          </p>
-          {errors.customerType && (
-            <div className="sk-error" style={{ marginBottom: 16 }}>
-              {errors.customerType}
-            </div>
-          )}
-          <div className="sk-cardgrid">
-            {CUSTOMER_TYPES.map((c) => (
-              <CustomerTypeCard
-                key={c.type}
-                def={c}
-                selected={booking.customerType === c.type}
-                onSelect={() => setCustomerType(c.type)}
-              />
-            ))}
-          </div>
-        </div>
-      )}
-
-      {/* ---------- Step 3: Activation selection ---------- */}
-      {step === 2 && (
         <div>
           <p className="sk-muted" style={{ marginBottom: 24, maxWidth: 560 }}>
             Select one or more activation options for this partner. Option-specific fields open up
@@ -300,8 +264,8 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
         </div>
       )}
 
-      {/* ---------- Step 4: Activation details ---------- */}
-      {step === 3 && (
+      {/* ---------- Step 3: Activation details ---------- */}
+      {step === 2 && (
         <div>
           <p className="sk-muted" style={{ marginBottom: 24, maxWidth: 560 }}>
             Fill in the details per selected activation. These feed the master Excel export.
@@ -323,8 +287,8 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
         </div>
       )}
 
-      {/* ---------- Step 5: Review ---------- */}
-      {step === 4 && <ReviewSummary booking={booking} />}
+      {/* ---------- Step 4: Review ---------- */}
+      {step === 3 && <ReviewSummary booking={booking} />}
 
       {/* ---------- Footer ---------- */}
       <div className="sk-wizard-foot">

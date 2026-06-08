@@ -15,14 +15,12 @@ function keyAccountHeroPos(): BookingSubmission {
   return {
     ...emptyBooking('Ebbe Lund', 'ebbe.lund@selected.dk'),
     partnerInfo: emptyPartnerInfo({ partnerName: 'Boutique Nord' }),
-    customerType: 'key_account',
     selectedActivations: ['hero_popup', 'pos_package'],
     activationDetails: {
       hero_popup: {
         ...emptyHeroPopup(),
         requestedQuantity: '1',
         preferredDeliveryWindow: 'Wk 14–15',
-        costOwner: 'HQ',
       },
       pos_package: { ...emptyPosPackage(), required: 'yes' },
     },
@@ -32,10 +30,9 @@ function keyAccountHeroPos(): BookingSubmission {
 function digitalBooking(): BookingSubmission {
   return {
     ...emptyBooking('Iiris Salo', 'iiris.salo@selected.fi'),
-    customerType: 'cbo_digital',
     selectedActivations: ['digital_package'],
     activationDetails: {
-      digital_package: { ...emptyDigitalPackage(), socialMedibank: true },
+      digital_package: { ...emptyDigitalPackage(), deliveryEmail: 'marketing@partner.com' },
     },
   };
 }
@@ -43,7 +40,6 @@ function digitalBooking(): BookingSubmission {
 function cameraBooking(): BookingSubmission {
   return {
     ...emptyBooking('Jonas Becker', 'jonas.becker@selected.de'),
-    customerType: 'key_account',
     selectedActivations: ['camera'],
     activationDetails: {
       camera: {
@@ -65,10 +61,9 @@ describe('bookingToRow', () => {
     }
   });
 
-  it('maps a Key Account hero pop-up + POS booking correctly', () => {
+  it('maps a hero pop-up + POS booking correctly', () => {
     const row = bookingToRow(keyAccountHeroPos());
     expect(row['Partner name']).toBe('Boutique Nord');
-    expect(row['Customer type']).toBe('Key Account');
     expect(row['Hero pop-up selected']).toBe('Yes');
     expect(row['Hero pop-up quantity']).toBe('1');
     expect(row['Hero pop-up cost owner']).toBe('HQ');
@@ -77,10 +72,10 @@ describe('bookingToRow', () => {
     expect(row['Delivery window']).toBe('Wk 14–15');
   });
 
-  it('summarises digital package assets', () => {
+  it('captures the digital package delivery email', () => {
     const row = bookingToRow(digitalBooking());
     expect(row['Digital package selected']).toBe('Yes');
-    expect(row['Digital package requested assets']).toContain('Social content via Medibank');
+    expect(row['Digital package delivery email']).toBe('marketing@partner.com');
   });
 
   it('exposes camera details when camera activation is selected', () => {
