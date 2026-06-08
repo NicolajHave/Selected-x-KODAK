@@ -15,7 +15,7 @@ import { emptyBooking } from './utils/booking';
 import { personaFromEmail } from './utils/auth';
 
 export default function App() {
-  const { bookings, refresh, save, updateStatus, updateNotes } = useBookings();
+  const { bookings, refresh, save, updateStatus, updateNotes, remove } = useBookings();
 
   const [entered, setEntered] = useState(false);
   const [role, setRole] = useState<Role>('rep');
@@ -116,6 +116,10 @@ export default function App() {
     setEditing(b);
     setNav('new');
   };
+  const handleDeleteFromDrawer = (b: BookingSubmission) => {
+    remove(b.submissionId);
+    setDrawerId(null);
+  };
 
   if (!entered) {
     return (
@@ -198,6 +202,7 @@ export default function App() {
         onStatusChange={handleStatusChange}
         onNotesChange={handleNotesChange}
         onEdit={handleEditFromDrawer}
+        onDelete={handleDeleteFromDrawer}
       />
       {showAdminGate && (
         <AdminGate

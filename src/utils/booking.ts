@@ -106,15 +106,16 @@ export function generateSubmissionId(): string {
 }
 
 /**
- * A blank booking. `createdBy` records who started it (internal), and the rep
- * email pre-fills the matching field; the rep name is left empty so the rep
- * enters it themselves rather than seeing a guessed name pre-filled.
+ * A blank booking. `createdBy` is the signed-in user's name (derived from their
+ * login email); it records who started the booking and pre-fills the sales rep
+ * name + email so the rep doesn't retype their own details.
  */
 export function emptyBooking(createdBy: string, repEmail: string): BookingSubmission {
   const now = new Date().toISOString();
   return {
     submissionId: generateSubmissionId(),
     partnerInfo: emptyPartnerInfo({
+      salesRepName: createdBy,
       salesRepEmail: repEmail,
     }),
     selectedActivations: [],
