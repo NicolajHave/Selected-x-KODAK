@@ -1,0 +1,209 @@
+/* =========================================================
+   Selected × Kodak — Foundation tokens (scoped)
+   "Stories through the lens"
+   2027 build DNA: brushed steel · warm greige · oak veneer edge.
+
+   IMPORTANT (embed safety): every token and base style is scoped under
+   `.sk-portal`. We never style :root, html, or body, so the host Brand
+   Platform's global CSS is untouched and nothing leaks out of the app root.
+   ========================================================= */
+
+@import url('https://fonts.googleapis.com/css2?family=Roboto+Slab:wght@400;500;600;700&family=Inter:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+
+.sk-portal {
+  /* ---------- Material palette (2027 build) ---------- */
+  --sk-steel: #adaba5;
+  --sk-steel-veneer: #bab8b2;
+  --sk-steel-light: #cac8c2;
+  --sk-steel-dark: #86847f;
+
+  --sk-greige: #a89a85;
+  --sk-greige-deep: #8b7d69;
+  --sk-canvas: #e8e2d7;
+  --sk-canvas-soft: #ddd6c8;
+  --sk-paper: #f3f0ea;
+  --sk-bone: #e2dbcd;
+
+  --sk-oak: #be8c3a;
+  --sk-oak-edge: #c99a46;
+  --sk-oak-deep: #99702c;
+  --sk-oak-soft: #e7d4ac;
+
+  --sk-ink: #121212;
+  --sk-charcoal: #232220;
+  --sk-graphite: #4a4843;
+  --sk-stone: #88847b;
+  --sk-marl: #bdb6ab;
+  --sk-hairline: #d5cfc3;
+
+  --sk-kodak-red: #d92f1f;
+  --sk-kodak-red-ink: #b4271a;
+  --sk-kodak-yellow: #f5b700;
+  --sk-kodak-yellow-soft: #f2da9a;
+
+  --sk-olive: #4e5a36;
+  --sk-burgundy: #6b2c2c;
+
+  /* ---------- Semantic tokens ---------- */
+  --fg-1: var(--sk-ink);
+  --fg-2: var(--sk-charcoal);
+  --fg-3: var(--sk-graphite);
+  --fg-4: var(--sk-stone);
+  --fg-inv: var(--sk-paper);
+
+  --bg-1: var(--sk-canvas);
+  --bg-2: var(--sk-paper);
+  --bg-3: var(--sk-canvas-soft);
+  --bg-dark: var(--sk-ink);
+
+  --rule-1: var(--sk-hairline);
+  --rule-2: var(--sk-marl);
+  --rule-ink: var(--sk-ink);
+  --rule-oak: var(--sk-oak-edge);
+
+  --accent: var(--sk-oak);
+  --accent-ink: var(--sk-oak-deep);
+  --accent-soft: var(--sk-oak-soft);
+
+  --signal: var(--sk-kodak-red);
+  --signal-ink: var(--sk-kodak-red-ink);
+
+  /* Status badge tones */
+  --status-draft-fg: var(--sk-graphite);
+  --status-draft-bg: var(--sk-bone);
+  --status-submitted-fg: #5a4100;
+  --status-submitted-bg: var(--sk-kodak-yellow-soft);
+  --status-reviewed-fg: #3a2828;
+  --status-reviewed-bg: #e8d2d2;
+  --status-approved-fg: #2d3520;
+  --status-approved-bg: #d3dac1;
+  --status-declined-fg: #ffffff;
+  --status-declined-bg: var(--sk-kodak-red);
+  --status-hold-fg: var(--sk-charcoal);
+  --status-hold-bg: var(--sk-marl);
+  --status-confirmed-fg: #f3f0ea;
+  --status-confirmed-bg: var(--sk-olive);
+
+  /* ---------- Type ---------- */
+  --font-display: 'Roboto Slab', Georgia, serif;
+  --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SF Mono', Menlo, monospace;
+
+  --tr-wide: 0.12em;
+  --tr-wider: 0.18em;
+
+  /* ---------- Spacing (4px base) ---------- */
+  --sp-1: 4px;
+  --sp-2: 8px;
+  --sp-3: 12px;
+  --sp-4: 16px;
+  --sp-5: 24px;
+  --sp-6: 32px;
+  --sp-7: 48px;
+  --sp-8: 64px;
+
+  /* ---------- Radii ---------- */
+  --r-1: 2px;
+  --r-2: 4px;
+  --r-3: 8px;
+  --r-pill: 999px;
+
+  /* ---------- Elevation ---------- */
+  --sh-modal: 0 24px 64px -16px rgba(18, 18, 18, 0.35);
+  --sh-pop: 0 8px 24px -8px rgba(18, 18, 18, 0.18), 0 2px 6px rgba(18, 18, 18, 0.06);
+
+  /* ---------- Motion ---------- */
+  --ease: cubic-bezier(0.2, 0.7, 0.2, 1);
+  --dur-fast: 120ms;
+  --dur-base: 200ms;
+
+  /* ---------- Layout ---------- */
+  --topbar: 64px;
+  --container: 1280px;
+
+  /* The app owns its own surface — but only inside the wrapper. */
+  background: var(--bg-1);
+  color: var(--fg-1);
+  font-family: var(--font-sans);
+  font-size: 15px;
+  line-height: 1.55;
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  min-height: 100%;
+}
+
+/* Reset scoped to the app only — never touches the host document. */
+.sk-portal *,
+.sk-portal *::before,
+.sk-portal *::after {
+  box-sizing: border-box;
+}
+
+.sk-portal h1,
+.sk-portal h2,
+.sk-portal h3,
+.sk-portal h4,
+.sk-portal p {
+  margin: 0;
+}
+
+.sk-portal h1 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.01em;
+}
+.sk-portal h2 {
+  font-family: var(--font-display);
+  font-weight: 500;
+  letter-spacing: -0.005em;
+}
+.sk-portal a {
+  color: var(--accent-ink);
+  text-decoration: none;
+}
+.sk-portal a:hover {
+  text-decoration: underline;
+}
+
+.sk-portal *:focus-visible {
+  outline: 2px solid var(--sk-ink);
+  outline-offset: 2px;
+}
+
+/* ---------- Shared utilities ---------- */
+.sk-eyebrow {
+  font-family: var(--font-sans);
+  font-weight: 500;
+  font-size: 11px;
+  line-height: 1.2;
+  text-transform: uppercase;
+  letter-spacing: var(--tr-wide);
+  color: var(--fg-3);
+}
+.sk-eyebrow--lg {
+  font-size: 13px;
+  letter-spacing: var(--tr-wider);
+}
+.sk-mono {
+  font-family: var(--font-mono);
+  font-variant-numeric: tabular-nums;
+}
+.sk-container {
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 40px 32px;
+}
+.sk-container--wide {
+  max-width: 1440px;
+}
+.sk-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
+}
