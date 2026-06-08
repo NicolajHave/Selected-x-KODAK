@@ -25,7 +25,6 @@ export function Button({
     .filter(Boolean)
     .join(' ');
   return (
-    // eslint-disable-next-line react/button-has-type
     <button type={type} className={cls} {...rest}>
       {children}
     </button>
