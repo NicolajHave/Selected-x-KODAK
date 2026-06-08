@@ -21,7 +21,6 @@ export function emptyPartnerInfo(
     customerNumber: '',
     market: '',
     marketOther: '',
-    country: '',
     region: '',
     storeName: '',
     city: '',
@@ -118,7 +117,6 @@ export function emptyBooking(createdBy: string, repEmail: string): BookingSubmis
     partnerInfo: emptyPartnerInfo({
       salesRepEmail: repEmail,
     }),
-    customerType: '',
     selectedActivations: [],
     activationDetails: {},
     status: 'draft',

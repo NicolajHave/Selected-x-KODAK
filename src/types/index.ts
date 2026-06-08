@@ -58,7 +58,6 @@ export interface PartnerInfo {
   market: string;
   /** Free-text market name, used only when `market === 'OTHER'`. */
   marketOther: string;
-  country: string;
   region: string;
   storeName: string;
   city: string;
@@ -141,7 +140,6 @@ export interface ActivationDetails {
 export interface BookingSubmission {
   submissionId: string;
   partnerInfo: PartnerInfo;
-  customerType: CustomerType | '';
   selectedActivations: ActivationSelection;
   activationDetails: ActivationDetails;
   status: BookingStatus;

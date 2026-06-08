@@ -148,44 +148,6 @@ export const ACTIVATION_AVAILABILITY_LABEL: Record<
   hq_funded: 'HQ funded',
 };
 
-/* ---------- Customer types ---------- */
-
-export interface CustomerTypeDef {
-  type: CustomerType;
-  name: string;
-  helper: string;
-}
-
-export const CUSTOMER_TYPES: CustomerTypeDef[] = [
-  {
-    type: 'key_account',
-    name: 'Key Account',
-    helper: 'Suited for larger physical activation.',
-  },
-  {
-    type: 'field_account',
-    name: 'Field Account',
-    helper: 'Suited for scalable retail support.',
-  },
-  {
-    type: 'cbo_digital',
-    name: 'CBO / Digital Partner',
-    helper: 'Suited for digital activation support.',
-  },
-  {
-    type: 'other',
-    name: 'Other / To be reviewed',
-    helper: 'Requires HQ review.',
-  },
-];
-
-export const CUSTOMER_TYPE_LABEL: Record<CustomerType, string> = {
-  key_account: 'Key Account',
-  field_account: 'Field Account',
-  cbo_digital: 'CBO / Digital Partner',
-  other: 'Other / To be reviewed',
-};
-
 /* ---------- Booking status ---------- */
 
 /** Each status maps to one of the design-system badge tones. */
@@ -232,13 +194,16 @@ export const MARKET_OTHER = 'OTHER';
 export const MARKETS: { value: string; label: string }[] = [
   { value: 'AT', label: 'Austria (AT)' },
   { value: 'BE', label: 'Belgium (BE)' },
+  { value: 'CA', label: 'Canada (CA)' },
   { value: 'DK', label: 'Denmark (DK)' },
   { value: 'FI', label: 'Finland (FI)' },
   { value: 'FR', label: 'France (FR)' },
   { value: 'DE', label: 'Germany (DE)' },
+  { value: 'IE', label: 'Ireland (IE)' },
   { value: 'IT', label: 'Italy (IT)' },
   { value: 'NL', label: 'Netherlands (NL)' },
   { value: 'NO', label: 'Norway (NO)' },
+  { value: 'PT', label: 'Portugal (PT)' },
   { value: 'SI', label: 'Slovenia (SI)' },
   { value: 'ES', label: 'Spain (ES)' },
   { value: 'SE', label: 'Sweden (SE)' },
