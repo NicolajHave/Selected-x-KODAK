@@ -50,9 +50,9 @@ export const ACTIVATIONS: ActivationDef[] = [
   {
     type: 'campaign_element',
     code: '02',
-    name: 'Campaign element / mini zigzag / print element',
+    name: 'Campaign element / mini zigzag',
     description:
-      'Mini wall element or print piece. Scalable across many doors for broad retail support.',
+      'Mini zigzag wall element. Scalable across many doors for broad retail support.',
     recommendedFor: 'field_account',
     recommendedLabel: 'Field Account',
     costOwner: 'Market',
@@ -60,20 +60,6 @@ export const ACTIVATIONS: ActivationDef[] = [
     needsQuantity: true,
     needsCostOwner: true,
     image: asset('brand/photos/mini-wall.png'),
-  },
-  {
-    type: 'pos_package',
-    code: '03',
-    name: 'POS package',
-    description:
-      'Point-of-sale kit to dress the partner space — signage, tags and counter pieces.',
-    recommendedFor: 'field_account',
-    recommendedLabel: 'Field Account',
-    costOwner: 'HQ',
-    availability: 'available',
-    needsQuantity: false,
-    needsCostOwner: false,
-    image: asset('brand/photos/merchandise-rail.jpeg'),
   },
   {
     type: 'digital_package',
@@ -101,34 +87,6 @@ export const ACTIVATIONS: ActivationDef[] = [
     needsQuantity: false,
     needsCostOwner: true,
     image: asset('brand/photos/spin-win-wheel.png'),
-  },
-  {
-    type: 'camera',
-    code: '06',
-    name: 'Camera activation',
-    description:
-      'Disposable or digital Kodak cameras for staff or consumer activation. Scope under HQ evaluation.',
-    recommendedFor: 'key_account',
-    recommendedLabel: 'Key Account',
-    costOwner: 'Market',
-    availability: 'under_evaluation',
-    needsQuantity: true,
-    needsCostOwner: false,
-    image: asset('brand/photos/kodak-disposable.png'),
-  },
-  {
-    type: 'catering',
-    code: '07',
-    name: 'Catering / launch support',
-    description:
-      'Event hospitality to support launch moments and partner presentations.',
-    recommendedFor: 'key_account',
-    recommendedLabel: 'Key Account',
-    costOwner: 'Market',
-    availability: 'market_partner_funded',
-    needsQuantity: false,
-    needsCostOwner: true,
-    image: asset('brand/photos/catering-popcorn.png'),
   },
 ];
 
@@ -199,6 +157,7 @@ export const MARKETS: { value: string; label: string }[] = [
   { value: 'FI', label: 'Finland (FI)' },
   { value: 'FR', label: 'France (FR)' },
   { value: 'DE', label: 'Germany (DE)' },
+  { value: 'GR', label: 'Greece (GR)' },
   { value: 'IE', label: 'Ireland (IE)' },
   { value: 'IT', label: 'Italy (IT)' },
   { value: 'NL', label: 'Netherlands (NL)' },
@@ -225,22 +184,3 @@ export function marketDisplay(p: { market: string; marketOther?: string }): stri
   if (p.market === MARKET_OTHER) return p.marketOther?.trim() || 'Other';
   return MARKET_LABEL[p.market] || p.market;
 }
-
-export const CAMERA_PURPOSE_LABEL: Record<string, string> = {
-  staff_activation: 'Staff activation',
-  consumer_activation: 'Consumer activation',
-  competition: 'Competition',
-  resale_potential: 'Resale potential',
-};
-
-export const CAMERA_TYPE_LABEL: Record<string, string> = {
-  disposable: 'Disposable',
-  digital: 'Digital',
-  tbc: 'To be confirmed',
-};
-
-export const CAMPAIGN_FORMAT_LABEL: Record<string, string> = {
-  mini_zigzag: 'Mini zigzag',
-  print_element: 'Print element',
-  other: 'Other',
-};

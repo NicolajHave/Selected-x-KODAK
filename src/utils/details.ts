@@ -1,12 +1,6 @@
 /** Turn an activation's detail block into label/value pairs for display. */
 import type { ActivationType, BookingSubmission } from '../types';
-import {
-  ACTIVATION_BY_TYPE,
-  CAMERA_PURPOSE_LABEL,
-  CAMERA_TYPE_LABEL,
-  CAMPAIGN_FORMAT_LABEL,
-} from '../data/catalog';
-import { yesNo } from './format';
+import { ACTIVATION_BY_TYPE } from '../data/catalog';
 
 export interface DetailRow {
   label: string;
@@ -36,19 +30,8 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
       if (!d) return [];
       return clean([
         { label: 'Requested quantity', value: d.requestedQuantity },
-        {
-          label: 'Format',
-          value: d.preferredFormat ? CAMPAIGN_FORMAT_LABEL[d.preferredFormat] : '',
-        },
+        { label: 'Format', value: 'Mini zigzag' },
         { label: 'Cost owner', value: ACTIVATION_BY_TYPE.campaign_element.costOwner },
-        { label: 'Notes', value: d.notes },
-      ]);
-    }
-    case 'pos_package': {
-      const d = det.pos_package;
-      if (!d) return [];
-      return clean([
-        { label: 'POS package required', value: d.required ? yesNo(d.required) : '' },
         { label: 'Notes', value: d.notes },
       ]);
     }
@@ -66,32 +49,9 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
       const d = det.spin_win;
       if (!d) return [];
       return clean([
-        { label: 'Requested', value: d.requested ? yesNo(d.requested) : '' },
         { label: 'Prize type', value: d.prizeType },
         { label: 'Estimated event period', value: d.estimatedEventPeriod },
         { label: 'Cost owner', value: ACTIVATION_BY_TYPE.spin_win.costOwner },
-        { label: 'Notes', value: d.notes },
-      ]);
-    }
-    case 'camera': {
-      const d = det.camera;
-      if (!d) return [];
-      return clean([
-        { label: 'Requested', value: d.requested ? yesNo(d.requested) : '' },
-        { label: 'Camera type', value: d.cameraType ? CAMERA_TYPE_LABEL[d.cameraType] : '' },
-        { label: 'Quantity', value: d.quantity },
-        { label: 'Purpose', value: d.purpose ? CAMERA_PURPOSE_LABEL[d.purpose] : '' },
-        { label: 'Notes', value: d.notes },
-      ]);
-    }
-    case 'catering': {
-      const d = det.catering;
-      if (!d) return [];
-      return clean([
-        { label: 'Requested', value: d.requested ? yesNo(d.requested) : '' },
-        { label: 'Event date / period', value: d.eventPeriod },
-        { label: 'Estimated guests', value: d.estimatedGuests },
-        { label: 'Cost owner', value: ACTIVATION_BY_TYPE.catering.costOwner },
         { label: 'Notes', value: d.notes },
       ]);
     }
