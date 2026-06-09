@@ -1,6 +1,6 @@
 /** Derived, display-friendly summaries of a booking's activations. */
 import type { ActivationType, BookingSubmission } from '../types';
-import { ACTIVATION_BY_TYPE, CAMPAIGN_FORMAT_LABEL } from '../data/catalog';
+import { ACTIVATION_BY_TYPE } from '../data/catalog';
 
 /** Short activation names, e.g. ["Hero pop-up setup / zigzag wall", …]. */
 export function activationNames(b: BookingSubmission): string[] {
@@ -30,13 +30,11 @@ export function deliveryWindow(b: BookingSubmission): string {
 export function totalQuantity(b: BookingSubmission): string {
   let sum = 0;
   let any = false;
-  const qtyFields: ActivationType[] = ['hero_popup', 'campaign_element', 'camera'];
+  const qtyFields: ActivationType[] = ['hero_popup', 'campaign_element'];
   for (const t of qtyFields) {
     if (!b.selectedActivations.includes(t)) continue;
-    const d = b.activationDetails[t] as
-      | { requestedQuantity?: string; quantity?: string }
-      | undefined;
-    const raw = d?.requestedQuantity ?? d?.quantity;
+    const d = b.activationDetails[t] as { requestedQuantity?: string } | undefined;
+    const raw = d?.requestedQuantity;
     const n = parseInt(String(raw ?? ''), 10);
     if (!Number.isNaN(n)) {
       sum += n;
@@ -48,14 +46,10 @@ export function totalQuantity(b: BookingSubmission): string {
 
 /** Human label for a single activation's quantity, used in the review list. */
 export function quantityLabel(b: BookingSubmission, t: ActivationType): string {
-  const d = b.activationDetails[t] as
-    | { requestedQuantity?: string; quantity?: string; preferredFormat?: string }
-    | undefined;
-  const qty = d?.requestedQuantity ?? d?.quantity;
+  const d = b.activationDetails[t] as { requestedQuantity?: string } | undefined;
+  const qty = d?.requestedQuantity;
   const parts: string[] = [];
   if (qty) parts.push(`${qty} ×`);
-  if (t === 'campaign_element' && d?.preferredFormat) {
-    parts.push(CAMPAIGN_FORMAT_LABEL[d.preferredFormat] || d.preferredFormat);
-  }
+  if (t === 'campaign_element' && qty) parts.push('Mini zigzag');
   return parts.join(' ');
 }

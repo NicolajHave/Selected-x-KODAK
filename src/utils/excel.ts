@@ -6,26 +6,10 @@
  */
 import * as XLSX from 'xlsx';
 import type { BookingSubmission } from '../types';
-import {
-  ACTIVATION_BY_TYPE,
-  CAMERA_PURPOSE_LABEL,
-  CAMERA_TYPE_LABEL,
-  CAMPAIGN_FORMAT_LABEL,
-  marketDisplay,
-  STATUS_BY_KEY,
-} from '../data/catalog';
+import { ACTIVATION_BY_TYPE, marketDisplay, STATUS_BY_KEY } from '../data/catalog';
 import { formatDate, todayStamp, yesNo } from './format';
 
 type Row = Record<string, string>;
-
-function cateringScope(b: BookingSubmission): string {
-  const d = b.activationDetails.catering;
-  if (!d) return '';
-  const parts: string[] = [];
-  if (d.estimatedGuests) parts.push(`${d.estimatedGuests} guests`);
-  if (d.eventPeriod) parts.push(d.eventPeriod);
-  return parts.join(' · ');
-}
 
 /** Map a booking to a flat, export-shaped row keyed by column header. */
 export function bookingToRow(b: BookingSubmission): Row {
@@ -39,7 +23,6 @@ export function bookingToRow(b: BookingSubmission): Row {
 
   const hero = b.activationDetails.hero_popup;
   const campaign = b.activationDetails.campaign_element;
-  const camera = b.activationDetails.camera;
   const digital = b.activationDetails.digital_package;
 
   return {
@@ -62,30 +45,14 @@ export function bookingToRow(b: BookingSubmission): Row {
 
     'Campaign element selected': sel('campaign_element'),
     'Campaign element quantity': campaign?.requestedQuantity || '',
-    'Campaign element format': campaign?.preferredFormat
-      ? CAMPAIGN_FORMAT_LABEL[campaign.preferredFormat] || campaign.preferredFormat
-      : '',
+    'Campaign element format': has('campaign_element') ? 'Mini zigzag' : '',
     'Campaign element cost owner': owner('campaign_element'),
-
-    'POS package selected': sel('pos_package'),
 
     'Digital package selected': sel('digital_package'),
     'Digital package delivery email': digital?.deliveryEmail || '',
 
     'Spin & Win selected': sel('spin_win'),
     'Spin & Win cost owner': owner('spin_win'),
-
-    'Camera activation selected': sel('camera'),
-    'Camera type': camera?.cameraType
-      ? CAMERA_TYPE_LABEL[camera.cameraType] || camera.cameraType
-      : '',
-    'Camera quantity': camera?.quantity || '',
-    'Camera purpose': camera?.purpose
-      ? CAMERA_PURPOSE_LABEL[camera.purpose] || camera.purpose
-      : '',
-
-    'Catering selected': sel('catering'),
-    'Catering scope': cateringScope(b),
 
     'Delivery window': hero?.preferredDeliveryWindow || '',
     'Additional notes': p.additionalNotes,
@@ -116,17 +83,10 @@ export const EXPORT_COLUMNS: string[] = [
   'Campaign element quantity',
   'Campaign element format',
   'Campaign element cost owner',
-  'POS package selected',
   'Digital package selected',
   'Digital package delivery email',
   'Spin & Win selected',
   'Spin & Win cost owner',
-  'Camera activation selected',
-  'Camera type',
-  'Camera quantity',
-  'Camera purpose',
-  'Catering selected',
-  'Catering scope',
   'Delivery window',
   'Additional notes',
   'Created date',

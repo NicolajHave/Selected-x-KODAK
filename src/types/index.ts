@@ -32,15 +32,12 @@ export type BookingStatus =
 /** Who carries the cost of an activation line. */
 export type CostOwner = 'HQ' | 'Market' | 'Partner';
 
-/** The seven activation options a partner can book. */
+/** The activation options a partner can book. */
 export type ActivationType =
   | 'hero_popup'
   | 'campaign_element'
-  | 'pos_package'
   | 'digital_package'
-  | 'spin_win'
-  | 'camera'
-  | 'catering';
+  | 'spin_win';
 
 /** Availability / funding status shown on each activation card. */
 export type ActivationAvailability =
@@ -82,12 +79,6 @@ export interface HeroPopupDetails {
 
 export interface CampaignElementDetails {
   requestedQuantity: string;
-  preferredFormat: 'mini_zigzag' | 'print_element' | 'other' | '';
-  notes: string;
-}
-
-export interface PosPackageDetails {
-  required: YesNo | '';
   notes: string;
 }
 
@@ -99,29 +90,8 @@ export interface DigitalPackageDetails {
 }
 
 export interface SpinWinDetails {
-  requested: YesNo | '';
   prizeType: string;
   estimatedEventPeriod: string;
-  notes: string;
-}
-
-export interface CameraDetails {
-  requested: YesNo | '';
-  cameraType: 'disposable' | 'digital' | 'tbc' | '';
-  quantity: string;
-  purpose:
-    | 'staff_activation'
-    | 'consumer_activation'
-    | 'competition'
-    | 'resale_potential'
-    | '';
-  notes: string;
-}
-
-export interface CateringDetails {
-  requested: YesNo | '';
-  eventPeriod: string;
-  estimatedGuests: string;
   notes: string;
 }
 
@@ -129,11 +99,8 @@ export interface CateringDetails {
 export interface ActivationDetails {
   hero_popup?: HeroPopupDetails;
   campaign_element?: CampaignElementDetails;
-  pos_package?: PosPackageDetails;
   digital_package?: DigitalPackageDetails;
   spin_win?: SpinWinDetails;
-  camera?: CameraDetails;
-  catering?: CateringDetails;
 }
 
 /** A complete booking record. */

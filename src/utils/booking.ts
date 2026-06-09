@@ -3,13 +3,10 @@ import type {
   ActivationDetails,
   ActivationType,
   BookingSubmission,
-  CameraDetails,
   CampaignElementDetails,
-  CateringDetails,
   DigitalPackageDetails,
   HeroPopupDetails,
   PartnerInfo,
-  PosPackageDetails,
   SpinWinDetails,
 } from '../types';
 
@@ -42,12 +39,6 @@ export const emptyHeroPopup = (): HeroPopupDetails => ({
 
 export const emptyCampaignElement = (): CampaignElementDetails => ({
   requestedQuantity: '',
-  preferredFormat: '',
-  notes: '',
-});
-
-export const emptyPosPackage = (): PosPackageDetails => ({
-  required: '',
   notes: '',
 });
 
@@ -58,24 +49,8 @@ export const emptyDigitalPackage = (): DigitalPackageDetails => ({
 });
 
 export const emptySpinWin = (): SpinWinDetails => ({
-  requested: '',
   prizeType: '',
   estimatedEventPeriod: '',
-  notes: '',
-});
-
-export const emptyCamera = (): CameraDetails => ({
-  requested: '',
-  cameraType: '',
-  quantity: '',
-  purpose: '',
-  notes: '',
-});
-
-export const emptyCatering = (): CateringDetails => ({
-  requested: '',
-  eventPeriod: '',
-  estimatedGuests: '',
   notes: '',
 });
 
@@ -86,16 +61,10 @@ export function emptyDetailFor(type: ActivationType): ActivationDetails[Activati
       return emptyHeroPopup();
     case 'campaign_element':
       return emptyCampaignElement();
-    case 'pos_package':
-      return emptyPosPackage();
     case 'digital_package':
       return emptyDigitalPackage();
     case 'spin_win':
       return emptySpinWin();
-    case 'camera':
-      return emptyCamera();
-    case 'catering':
-      return emptyCatering();
   }
 }
 
