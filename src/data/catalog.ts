@@ -45,7 +45,7 @@ export const ACTIVATIONS: ActivationDef[] = [
     availability: 'hq_funded',
     needsQuantity: true,
     needsCostOwner: true,
-    image: asset('brand/photos/wall-front.png'),
+    image: asset('brand/photos/hero-popup-display.png'),
   },
   {
     type: 'campaign_element',
