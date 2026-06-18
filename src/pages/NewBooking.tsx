@@ -144,7 +144,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
               <TextInput
                 value={booking.partnerInfo.partnerName}
                 onChange={(v) => setPartner('partnerName', v)}
-                placeholder="e.g. Boutique Nord"
                 invalid={!!errors.partnerName}
               />
             </Field>
@@ -152,7 +151,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
               <TextInput
                 value={booking.partnerInfo.customerNumber}
                 onChange={(v) => setPartner('customerNumber', v)}
-                placeholder="e.g. DK-104882"
               />
             </Field>
             <Field label="Market" required hint="Drives currency + HQ routing." error={errors.market}>
@@ -168,7 +166,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
                 <TextInput
                   value={booking.partnerInfo.marketOther}
                   onChange={(v) => setPartner('marketOther', v)}
-                  placeholder="e.g. Ireland"
                   invalid={!!errors.marketOther}
                 />
               </Field>
@@ -177,14 +174,12 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
               <TextInput
                 value={booking.partnerInfo.region}
                 onChange={(v) => setPartner('region', v)}
-                placeholder="e.g. Capital Region"
               />
             </Field>
             <Field label="Store / door name">
               <TextInput
                 value={booking.partnerInfo.storeName}
                 onChange={(v) => setPartner('storeName', v)}
-                placeholder="e.g. Boutique Nord · Strøget"
               />
             </Field>
           </div>
@@ -193,7 +188,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
               <TextInput
                 value={booking.partnerInfo.city}
                 onChange={(v) => setPartner('city', v)}
-                placeholder="e.g. Copenhagen"
               />
             </Field>
             <Field label="Sales rep name" required error={errors.salesRepName}>
@@ -216,7 +210,6 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
               <TextInput
                 value={booking.partnerInfo.partnerContactPerson}
                 onChange={(v) => setPartner('partnerContactPerson', v)}
-                placeholder="e.g. Mette Krogh"
               />
             </Field>
             <Field label="Partner contact email" error={errors.partnerContactEmail}>
