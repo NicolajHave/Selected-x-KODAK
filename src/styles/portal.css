@@ -345,6 +345,11 @@
   background-color: var(--sk-steel-light);
   border-radius: var(--r-3) var(--r-3) 0 0;
 }
+.sk-portal .sk-selcard__media--video {
+  display: block;
+  width: calc(100% + 40px);
+  object-fit: contain;
+}
 .sk-portal .sk-tick {
   width: 18px;
   height: 18px;

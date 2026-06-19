@@ -23,7 +23,6 @@ export function bookingToRow(b: BookingSubmission): Row {
 
   const hero = b.activationDetails.hero_popup;
   const campaign = b.activationDetails.campaign_element;
-  const digital = b.activationDetails.digital_package;
 
   return {
     'Submission ID': b.submissionId,
@@ -47,9 +46,6 @@ export function bookingToRow(b: BookingSubmission): Row {
     'Campaign element quantity': campaign?.requestedQuantity || '',
     'Campaign element format': has('campaign_element') ? 'Mini zigzag' : '',
     'Campaign element cost owner': owner('campaign_element'),
-
-    'Digital package selected': sel('digital_package'),
-    'Digital package delivery email': digital?.deliveryEmail || '',
 
     'Spin & Win selected': sel('spin_win'),
     'Spin & Win cost owner': owner('spin_win'),
@@ -83,8 +79,6 @@ export const EXPORT_COLUMNS: string[] = [
   'Campaign element quantity',
   'Campaign element format',
   'Campaign element cost owner',
-  'Digital package selected',
-  'Digital package delivery email',
   'Spin & Win selected',
   'Spin & Win cost owner',
   'Delivery window',
