@@ -17,12 +17,26 @@ export function ActivationCard({ def, selected, onToggle }: ActivationCardProps)
       aria-pressed={selected}
       onClick={onToggle}
     >
-      {def.image && (
-        <span
-          className="sk-selcard__media"
-          style={{ backgroundImage: `url('${def.image}')` }}
+      {def.video ? (
+        <video
+          className="sk-selcard__media sk-selcard__media--video"
+          poster={def.image}
+          autoPlay
+          loop
+          muted
+          playsInline
           aria-hidden="true"
-        />
+        >
+          <source src={def.video} type="video/mp4" />
+        </video>
+      ) : (
+        def.image && (
+          <span
+            className="sk-selcard__media"
+            style={{ backgroundImage: `url('${def.image}')` }}
+            aria-hidden="true"
+          />
+        )
       )}
       <div className="sk-selcard__head">
         <div>

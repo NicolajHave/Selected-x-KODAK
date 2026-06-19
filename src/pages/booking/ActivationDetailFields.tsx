@@ -2,7 +2,6 @@ import type {
   ActivationType,
   BookingSubmission,
   CampaignElementDetails,
-  DigitalPackageDetails,
   HeroPopupDetails,
   SpinWinDetails,
 } from '../../types';
@@ -37,12 +36,6 @@ export function ActivationDetailBlock({ type, booking, setDetail, errors }: Deta
             d={(booking.activationDetails.campaign_element || {}) as CampaignElementDetails}
             set={set}
             errors={errors}
-          />
-        )}
-        {type === 'digital_package' && (
-          <DigitalFields
-            d={(booking.activationDetails.digital_package || {}) as DigitalPackageDetails}
-            set={set}
           />
         )}
         {type === 'spin_win' && (
@@ -128,46 +121,6 @@ function CampaignFields({
         </Field>
       </div>
       <div>
-        <Field label="Notes">
-          <Textarea value={d.notes || ''} onChange={(v) => set('notes', v)} rows={2} />
-        </Field>
-      </div>
-    </div>
-  );
-}
-
-function DigitalFields({
-  d,
-  set,
-}: {
-  d: DigitalPackageDetails;
-  set: (f: string, v: unknown) => void;
-}) {
-  return (
-    <div className="sk-formgrid">
-      <div>
-        <p className="sk-muted" style={{ fontSize: 13, lineHeight: 1.5, marginBottom: 4 }}>
-          The full digital asset package is included — social content via Medibank, newsletter
-          assets, campaign imagery and the storytelling module. Just tell us where to send it.
-        </p>
-        <Field label="Delivery email" required hint="Where we send the digital material.">
-          <TextInput
-            value={d.deliveryEmail || ''}
-            onChange={(v) => set('deliveryEmail', v)}
-            type="email"
-            inputMode="email"
-            placeholder="e.g. marketing@partner.com"
-          />
-        </Field>
-      </div>
-      <div>
-        <Field label="Go-live period">
-          <TextInput
-            value={d.goLivePeriod || ''}
-            onChange={(v) => set('goLivePeriod', v)}
-            placeholder="e.g. May 2026"
-          />
-        </Field>
         <Field label="Notes">
           <Textarea value={d.notes || ''} onChange={(v) => set('notes', v)} rows={2} />
         </Field>

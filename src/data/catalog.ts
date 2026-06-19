@@ -30,6 +30,8 @@ export interface ActivationDef {
   /** Whether a cost owner must be chosen before submit. */
   needsCostOwner: boolean;
   image?: string;
+  /** Optional looping video shown on the card instead of a still image. */
+  video?: string;
 }
 
 export const ACTIVATIONS: ActivationDef[] = [
@@ -59,24 +61,11 @@ export const ACTIVATIONS: ActivationDef[] = [
     availability: 'market_partner_funded',
     needsQuantity: true,
     needsCostOwner: true,
-    image: asset('brand/photos/mini-wall.png'),
-  },
-  {
-    type: 'digital_package',
-    code: '04',
-    name: 'Digital asset package',
-    description:
-      'Social, newsletter and campaign imagery delivered via Medibank for digital-first partners.',
-    recommendedFor: 'cbo_digital',
-    recommendedLabel: 'CBO / Digital Partner',
-    costOwner: 'HQ',
-    availability: 'available',
-    needsQuantity: false,
-    needsCostOwner: false,
+    image: asset('brand/photos/wall-front.png'),
   },
   {
     type: 'spin_win',
-    code: '05',
+    code: '03',
     name: 'Spin & Win',
     description:
       'Engagement wheel with disposable camera and totebag prizes to drive in-store footfall.',
@@ -87,6 +76,7 @@ export const ACTIVATIONS: ActivationDef[] = [
     needsQuantity: false,
     needsCostOwner: true,
     image: asset('brand/photos/spin-win-wheel.png'),
+    video: asset('brand/photos/spin-win-wheel.mp4'),
   },
 ];
 

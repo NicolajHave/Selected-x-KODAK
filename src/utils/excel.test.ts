@@ -4,7 +4,6 @@ import type { BookingSubmission } from '../types';
 import {
   emptyBooking,
   emptyCampaignElement,
-  emptyDigitalPackage,
   emptyHeroPopup,
   emptyPartnerInfo,
 } from './booking';
@@ -22,16 +21,6 @@ function heroCampaignBooking(): BookingSubmission {
         preferredDeliveryWindow: 'Wk 14–15',
       },
       campaign_element: { ...emptyCampaignElement(), requestedQuantity: '2' },
-    },
-  };
-}
-
-function digitalBooking(): BookingSubmission {
-  return {
-    ...emptyBooking('Iiris Salo', 'iiris.salo@selected.fi'),
-    selectedActivations: ['digital_package'],
-    activationDetails: {
-      digital_package: { ...emptyDigitalPackage(), deliveryEmail: 'marketing@partner.com' },
     },
   };
 }
@@ -54,11 +43,5 @@ describe('bookingToRow', () => {
     expect(row['Campaign element quantity']).toBe('2');
     expect(row['Campaign element format']).toBe('Mini zigzag');
     expect(row['Delivery window']).toBe('Wk 14–15');
-  });
-
-  it('captures the digital package delivery email', () => {
-    const row = bookingToRow(digitalBooking());
-    expect(row['Digital package selected']).toBe('Yes');
-    expect(row['Digital package delivery email']).toBe('marketing@partner.com');
   });
 });

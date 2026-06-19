@@ -4,7 +4,6 @@ import type {
   ActivationType,
   BookingSubmission,
   CampaignElementDetails,
-  DigitalPackageDetails,
   HeroPopupDetails,
   PartnerInfo,
   SpinWinDetails,
@@ -42,12 +41,6 @@ export const emptyCampaignElement = (): CampaignElementDetails => ({
   notes: '',
 });
 
-export const emptyDigitalPackage = (): DigitalPackageDetails => ({
-  deliveryEmail: '',
-  goLivePeriod: '',
-  notes: '',
-});
-
 export const emptySpinWin = (): SpinWinDetails => ({
   prizeType: '',
   estimatedEventPeriod: '',
@@ -61,8 +54,6 @@ export function emptyDetailFor(type: ActivationType): ActivationDetails[Activati
       return emptyHeroPopup();
     case 'campaign_element':
       return emptyCampaignElement();
-    case 'digital_package':
-      return emptyDigitalPackage();
     case 'spin_win':
       return emptySpinWin();
   }

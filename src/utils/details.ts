@@ -35,16 +35,6 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
         { label: 'Notes', value: d.notes },
       ]);
     }
-    case 'digital_package': {
-      const d = det.digital_package;
-      if (!d) return [];
-      return clean([
-        { label: 'Package', value: 'Full digital asset package' },
-        { label: 'Delivery email', value: d.deliveryEmail },
-        { label: 'Go-live period', value: d.goLivePeriod },
-        { label: 'Notes', value: d.notes },
-      ]);
-    }
     case 'spin_win': {
       const d = det.spin_win;
       if (!d) return [];

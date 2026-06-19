@@ -36,7 +36,6 @@ export type CostOwner = 'HQ' | 'Market' | 'Partner';
 export type ActivationType =
   | 'hero_popup'
   | 'campaign_element'
-  | 'digital_package'
   | 'spin_win';
 
 /** Availability / funding status shown on each activation card. */
@@ -82,13 +81,6 @@ export interface CampaignElementDetails {
   notes: string;
 }
 
-export interface DigitalPackageDetails {
-  /** Email address the full digital asset package should be sent to. */
-  deliveryEmail: string;
-  goLivePeriod: string;
-  notes: string;
-}
-
 export interface SpinWinDetails {
   prizeType: string;
   estimatedEventPeriod: string;
@@ -99,7 +91,6 @@ export interface SpinWinDetails {
 export interface ActivationDetails {
   hero_popup?: HeroPopupDetails;
   campaign_element?: CampaignElementDetails;
-  digital_package?: DigitalPackageDetails;
   spin_win?: SpinWinDetails;
 }
 
