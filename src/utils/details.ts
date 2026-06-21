@@ -45,5 +45,14 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
         { label: 'Notes', value: d.notes },
       ]);
     }
+    case 'small_activation_package': {
+      const d = det.small_activation_package;
+      if (!d) return [];
+      return clean([
+        { label: 'Includes', value: '50 totebags · 10 disposable cameras' },
+        { label: 'Cost owner', value: ACTIVATION_BY_TYPE.small_activation_package.costOwner },
+        { label: 'Notes', value: d.notes },
+      ]);
+    }
   }
 }

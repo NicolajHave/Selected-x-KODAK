@@ -36,7 +36,8 @@ export type CostOwner = 'HQ' | 'Market' | 'Partner';
 export type ActivationType =
   | 'hero_popup'
   | 'campaign_element'
-  | 'spin_win';
+  | 'spin_win'
+  | 'small_activation_package';
 
 /** Availability / funding status shown on each activation card. */
 export type ActivationAvailability =
@@ -87,11 +88,17 @@ export interface SpinWinDetails {
   notes: string;
 }
 
+/** Fixed bundle (50 totebags + 10 disposable cameras); only the notes vary. */
+export interface SmallActivationPackageDetails {
+  notes: string;
+}
+
 /** All activation detail blocks. Each is optional; present when selected. */
 export interface ActivationDetails {
   hero_popup?: HeroPopupDetails;
   campaign_element?: CampaignElementDetails;
   spin_win?: SpinWinDetails;
+  small_activation_package?: SmallActivationPackageDetails;
 }
 
 /** A complete booking record. */

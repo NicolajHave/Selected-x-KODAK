@@ -3,6 +3,7 @@ import type {
   BookingSubmission,
   CampaignElementDetails,
   HeroPopupDetails,
+  SmallActivationPackageDetails,
   SpinWinDetails,
 } from '../../types';
 import { ACTIVATION_BY_TYPE } from '../../data/catalog';
@@ -40,6 +41,12 @@ export function ActivationDetailBlock({ type, booking, setDetail, errors }: Deta
         )}
         {type === 'spin_win' && (
           <SpinFields d={(booking.activationDetails.spin_win || {}) as SpinWinDetails} set={set} />
+        )}
+        {type === 'small_activation_package' && (
+          <SmallPackageFields
+            d={(booking.activationDetails.small_activation_package || {}) as SmallActivationPackageDetails}
+            set={set}
+          />
         )}
       </FormSection>
     </div>
@@ -155,6 +162,31 @@ function SpinFields({
             placeholder="e.g. June 2026"
           />
         </Field>
+        <Field label="Notes">
+          <Textarea value={d.notes || ''} onChange={(v) => set('notes', v)} rows={2} />
+        </Field>
+      </div>
+    </div>
+  );
+}
+
+function SmallPackageFields({
+  d,
+  set,
+}: {
+  d: SmallActivationPackageDetails;
+  set: (f: string, v: unknown) => void;
+}) {
+  return (
+    <div className="sk-formgrid">
+      <div>
+        <Field label="Includes">
+          <div className="sk-defval" style={{ fontSize: 14, paddingTop: 4 }}>
+            50 totebags · 10 disposable cameras
+          </div>
+        </Field>
+      </div>
+      <div>
         <Field label="Notes">
           <Textarea value={d.notes || ''} onChange={(v) => set('notes', v)} rows={2} />
         </Field>

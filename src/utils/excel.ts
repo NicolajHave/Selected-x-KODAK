@@ -50,6 +50,12 @@ export function bookingToRow(b: BookingSubmission): Row {
     'Spin & Win selected': sel('spin_win'),
     'Spin & Win cost owner': owner('spin_win'),
 
+    'Small activation package selected': sel('small_activation_package'),
+    'Small activation package contents': has('small_activation_package')
+      ? '50 totebags; 10 disposable cameras'
+      : '',
+    'Small activation package cost owner': owner('small_activation_package'),
+
     'Delivery window': hero?.preferredDeliveryWindow || '',
     'Additional notes': p.additionalNotes,
     'Created date': formatDate(b.createdAt),
@@ -81,6 +87,9 @@ export const EXPORT_COLUMNS: string[] = [
   'Campaign element cost owner',
   'Spin & Win selected',
   'Spin & Win cost owner',
+  'Small activation package selected',
+  'Small activation package contents',
+  'Small activation package cost owner',
   'Delivery window',
   'Additional notes',
   'Created date',
