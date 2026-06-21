@@ -6,6 +6,7 @@ import type {
   CampaignElementDetails,
   HeroPopupDetails,
   PartnerInfo,
+  SmallActivationPackageDetails,
   SpinWinDetails,
 } from '../types';
 
@@ -47,6 +48,10 @@ export const emptySpinWin = (): SpinWinDetails => ({
   notes: '',
 });
 
+export const emptySmallActivationPackage = (): SmallActivationPackageDetails => ({
+  notes: '',
+});
+
 /** Build the empty detail block for a given activation type. */
 export function emptyDetailFor(type: ActivationType): ActivationDetails[ActivationType] {
   switch (type) {
@@ -56,6 +61,8 @@ export function emptyDetailFor(type: ActivationType): ActivationDetails[Activati
       return emptyCampaignElement();
     case 'spin_win':
       return emptySpinWin();
+    case 'small_activation_package':
+      return emptySmallActivationPackage();
   }
 }
 

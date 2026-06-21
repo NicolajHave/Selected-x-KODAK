@@ -78,7 +78,31 @@ export const ACTIVATIONS: ActivationDef[] = [
     image: asset('brand/photos/spin-win-wheel.png'),
     video: asset('brand/photos/spin-win-wheel.mp4'),
   },
+  {
+    type: 'small_activation_package',
+    code: '04',
+    name: 'Small Activation Package',
+    description:
+      'A compact kit containing 50 totebags and 10 disposable cameras to activate smaller doors.',
+    recommendedFor: 'field_account',
+    recommendedLabel: 'Southern markets',
+    costOwner: 'HQ',
+    availability: 'hq_funded',
+    needsQuantity: false,
+    needsCostOwner: false,
+  },
 ];
+
+/** Markets where the Small Activation Package (case 04) is offered. */
+export const SMALL_PACKAGE_MARKETS = ['ES', 'IT', 'FR', 'GR', 'PT'];
+
+/** Activations available for a given market — the small package is market-gated. */
+export function activationsForMarket(market: string): ActivationDef[] {
+  return ACTIVATIONS.filter(
+    (a) =>
+      a.type !== 'small_activation_package' || SMALL_PACKAGE_MARKETS.includes(market),
+  );
+}
 
 export const ACTIVATION_BY_TYPE: Record<ActivationType, ActivationDef> =
   ACTIVATIONS.reduce((acc, a) => {

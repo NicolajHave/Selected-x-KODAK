@@ -4,7 +4,13 @@ import type {
   BookingSubmission,
   PartnerInfo,
 } from '../types';
-import { ACTIVATIONS, MARKETS, MARKET_OTHER } from '../data/catalog';
+import {
+  ACTIVATIONS,
+  MARKETS,
+  MARKET_OTHER,
+  SMALL_PACKAGE_MARKETS,
+  activationsForMarket,
+} from '../data/catalog';
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 import { StepProgress } from '../components/StepProgress';
@@ -43,7 +49,17 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
 
   /* ---------- mutators ---------- */
   const setPartner = (field: keyof PartnerInfo, value: string) =>
-    setBooking((b) => ({ ...b, partnerInfo: { ...b.partnerInfo, [field]: value } }));
+    setBooking((b) => {
+      const next = { ...b, partnerInfo: { ...b.partnerInfo, [field]: value } };
+      // The Small Activation Package is only offered in certain markets — if the
+      // market changes to an ineligible one, drop it from the selection.
+      if (field === 'market' && !SMALL_PACKAGE_MARKETS.includes(value)) {
+        next.selectedActivations = next.selectedActivations.filter(
+          (t) => t !== 'small_activation_package',
+        );
+      }
+      return next;
+    });
 
   const toggleActivation = (type: ActivationType) =>
     setBooking((b) => {
@@ -245,7 +261,7 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
             </div>
           )}
           <div className="sk-cardgrid">
-            {ACTIVATIONS.map((a) => (
+            {activationsForMarket(booking.partnerInfo.market).map((a) => (
               <ActivationCard
                 key={a.type}
                 def={a}
