@@ -1,48 +1,110 @@
-import { useCallback, useState } from 'react';
-import type { BookingStatus, BookingSubmission } from '../types';
+import { useCallback, useEffect, useState } from 'react';
+import type { BookingStatus, BookingSubmission, Role } from '../types';
 import { bookingRepository } from '../data/repository';
+import {
+  deleteBooking,
+  listBookings,
+  submitBooking,
+  updateBookingNotes,
+  updateBookingStatus,
+} from '../data/remoteBookings';
 
 /**
- * Local state over the booking repository.
+ * Bookings for the current role.
  *
- * Components never touch persistence directly — they go through this hook, which
- * delegates to `bookingRepository`. Swapping localStorage for a backend means
- * making the repository async and awaiting here; the component API stays stable.
+ * Sales rep — drafts and their own history live in this browser (they cannot
+ * read the shared table), and submitting pushes the booking to HQ. If that push
+ * fails the caller is told, so a rep is never left believing HQ received it.
+ *
+ * HQ / Admin — the list comes from the server, so every rep's submission shows
+ * up regardless of which machine it was created on.
  */
-export function useBookings() {
+export function useBookings(role: Role) {
+  const isAdmin = role === 'admin';
+
   const [bookings, setBookings] = useState<BookingSubmission[]>(() =>
-    bookingRepository.list(),
+    isAdmin ? [] : bookingRepository.list(),
+  );
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState('');
+
+  const refresh = useCallback(async () => {
+    if (!isAdmin) {
+      setBookings(bookingRepository.list());
+      return;
+    }
+    setLoading(true);
+    setError('');
+    try {
+      setBookings(await listBookings());
+    } catch (e) {
+      setError(e instanceof Error ? e.message : 'Could not load bookings.');
+    } finally {
+      setLoading(false);
+    }
+  }, [isAdmin]);
+
+  useEffect(() => {
+    void refresh();
+  }, [refresh]);
+
+  /** Save a draft. Drafts stay local until they are submitted. */
+  const saveDraft = useCallback((booking: BookingSubmission): BookingSubmission => {
+    return bookingRepository.upsert({ ...booking, status: 'draft' });
+  }, []);
+
+  /** Submit to HQ. Throws if the booking could not be delivered. */
+  const submit = useCallback(
+    async (booking: BookingSubmission): Promise<BookingSubmission> => {
+      const now = new Date().toISOString();
+      const toSend: BookingSubmission = {
+        ...booking,
+        status: 'submitted',
+        submittedAt: booking.submittedAt || now,
+        updatedAt: now,
+      };
+      await submitBooking(toSend);
+      // Only mirror locally once HQ has it, so the rep's list reflects reality.
+      bookingRepository.upsert(toSend);
+      setBookings(bookingRepository.list());
+      return toSend;
+    },
+    [],
   );
 
-  const refresh = useCallback(() => {
-    setBookings(bookingRepository.list());
-  }, []);
+  const updateStatus = useCallback(
+    async (id: string, status: BookingStatus) => {
+      await updateBookingStatus(id, status);
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const save = useCallback((booking: BookingSubmission): BookingSubmission => {
-    const saved = bookingRepository.upsert(booking);
-    setBookings(bookingRepository.list());
-    return saved;
-  }, []);
+  const updateNotes = useCallback(
+    async (id: string, internalNotes: string) => {
+      await updateBookingNotes(id, internalNotes);
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const updateStatus = useCallback((id: string, status: BookingStatus) => {
-    const existing = bookingRepository.get(id);
-    if (!existing) return;
-    bookingRepository.upsert({ ...existing, status });
-    setBookings(bookingRepository.list());
-  }, []);
+  const remove = useCallback(
+    async (id: string) => {
+      await deleteBooking(id);
+      await refresh();
+    },
+    [refresh],
+  );
 
-  const updateNotes = useCallback((id: string, internalNotes: string) => {
-    const existing = bookingRepository.get(id);
-    if (!existing) return;
-    bookingRepository.upsert({ ...existing, internalNotes });
-    setBookings(bookingRepository.list());
-  }, []);
-
-  /** Permanently delete a booking (e.g. a test record). Not reversible. */
-  const remove = useCallback((id: string) => {
-    bookingRepository.remove(id);
-    setBookings(bookingRepository.list());
-  }, []);
-
-  return { bookings, refresh, save, updateStatus, updateNotes, remove };
+  return {
+    bookings,
+    loading,
+    error,
+    refresh,
+    saveDraft,
+    submit,
+    updateStatus,
+    updateNotes,
+    remove,
+  };
 }

@@ -40,9 +40,20 @@ interface NewBookingProps {
   onSaveDraft: (b: BookingSubmission) => void;
   onSubmit: (b: BookingSubmission) => void;
   onCancel: () => void;
+  /** True while the booking is being sent to HQ. */
+  submitting?: boolean;
+  /** Set when the booking could not be delivered to HQ. */
+  submitError?: string;
 }
 
-export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBookingProps) {
+export function NewBooking({
+  initial,
+  onSaveDraft,
+  onSubmit,
+  onCancel,
+  submitting = false,
+  submitError = '',
+}: NewBookingProps) {
   const [booking, setBooking] = useState<BookingSubmission>(initial);
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
@@ -299,13 +310,19 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
       {/* ---------- Step 4: Review ---------- */}
       {step === 3 && <ReviewSummary booking={booking} />}
 
+      {submitError && (
+        <div className="sk-login__error" role="alert" style={{ marginTop: 20 }}>
+          {submitError}
+        </div>
+      )}
+
       {/* ---------- Footer ---------- */}
       <div className="sk-wizard-foot">
-        <Button variant="ghost" onClick={goBack}>
+        <Button variant="ghost" onClick={goBack} disabled={submitting}>
           {step === 0 ? 'Cancel' : '← Back'}
         </Button>
         <div className="sk-wizard-foot__right">
-          <Button variant="ghost" onClick={() => onSaveDraft(booking)}>
+          <Button variant="ghost" onClick={() => onSaveDraft(booking)} disabled={submitting}>
             Save as draft
           </Button>
           {step < STEP_TITLES.length - 1 ? (
@@ -313,8 +330,8 @@ export function NewBooking({ initial, onSaveDraft, onSubmit, onCancel }: NewBook
               Next →
             </Button>
           ) : (
-            <Button variant="primary" onClick={handleSubmit}>
-              Submit booking
+            <Button variant="primary" onClick={handleSubmit} disabled={submitting}>
+              {submitting ? 'Sending to HQ…' : 'Submit booking'}
             </Button>
           )}
         </div>

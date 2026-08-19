@@ -18,6 +18,8 @@ interface HeaderProps {
   onRoleChange: (role: Role) => void;
   personaName: string;
   personaInitials: string;
+  /** Provided only when an HQ session is active. */
+  onSignOut?: () => void;
 }
 
 export function Header({
@@ -27,6 +29,7 @@ export function Header({
   onRoleChange,
   personaName,
   personaInitials,
+  onSignOut,
 }: HeaderProps) {
   return (
     <header className="sk-header">
@@ -53,6 +56,11 @@ export function Header({
           <span className="sk-userchip__name">{personaName}</span>
           <span className={`sk-avatar sk-avatar--${role}`}>{personaInitials}</span>
         </div>
+        {onSignOut && (
+          <button type="button" className="sk-navlink" onClick={onSignOut}>
+            Sign out
+          </button>
+        )}
       </div>
     </header>
   );

@@ -1,4 +1,4 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import type { BookingStatus, BookingSubmission, Role } from './types';
 import { AppShell } from './components/AppShell';
 import type { NavKey } from './components/Header';
@@ -12,11 +12,9 @@ import { ConfirmationScreen } from './components/ConfirmationScreen';
 import { AdminGate } from './components/AdminGate';
 import { useBookings } from './hooks/useBookings';
 import { emptyBooking } from './utils/booking';
-import { personaFromEmail } from './utils/auth';
+import { currentAdmin, personaFromEmail, signOutAdmin } from './utils/auth';
 
 export default function App() {
-  const { bookings, refresh, save, updateStatus, updateNotes, remove } = useBookings();
-
   const [entered, setEntered] = useState(false);
   const [role, setRole] = useState<Role>('rep');
   const [email, setEmail] = useState('');
@@ -24,10 +22,34 @@ export default function App() {
   const [showAdminGate, setShowAdminGate] = useState(false);
   const [nav, setNav] = useState<NavKey>('dashboard');
 
+  const {
+    bookings,
+    loading,
+    error,
+    refresh,
+    saveDraft,
+    submit,
+    updateStatus,
+    updateNotes,
+    remove,
+  } = useBookings(role);
+
   // Transient flow state
   const [editing, setEditing] = useState<BookingSubmission | null>(null);
   const [confirmation, setConfirmation] = useState<BookingSubmission | null>(null);
   const [drawerId, setDrawerId] = useState<string | null>(null);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  // Reuse an existing HQ session so admins are not asked to sign in twice.
+  useEffect(() => {
+    void currentAdmin().then((session) => {
+      if (session) {
+        setAdminAuthed(true);
+        setEmail((current) => current || session.email);
+      }
+    });
+  }, []);
 
   const persona = useMemo(
     () => personaFromEmail(email || 'guest@selected'),
@@ -42,6 +64,7 @@ export default function App() {
   const startNew = () => {
     setEditing(emptyBooking(persona.name, persona.email));
     setConfirmation(null);
+    setSubmitError('');
     setNav('new');
   };
 
@@ -63,7 +86,7 @@ export default function App() {
   };
 
   const handleRoleChange = (next: Role) => {
-    // HQ / Admin is gated: prompt for the admin password unless already authed.
+    // HQ / Admin is gated: prompt for a real sign-in unless already authed.
     if (next === 'admin' && !adminAuthed) {
       setShowAdminGate(true);
       return;
@@ -74,7 +97,7 @@ export default function App() {
   const handleEnter = (nextRole: Role, nextEmail: string) => {
     setEmail(nextEmail);
     setRole(nextRole);
-    setAdminAuthed(nextRole === 'admin');
+    if (nextRole === 'admin') setAdminAuthed(true);
     setNav(nextRole === 'admin' ? 'admin' : 'dashboard');
     setEntered(true);
   };
@@ -88,28 +111,37 @@ export default function App() {
 
   /* ---------- wizard handlers ---------- */
   const handleSaveDraft = (b: BookingSubmission) => {
-    const saved = save({ ...b, status: 'draft' });
+    const saved = saveDraft(b);
     setEditing(null);
+    setSubmitError('');
     setConfirmation(saved);
   };
 
-  const handleSubmit = (b: BookingSubmission) => {
-    const now = new Date().toISOString();
-    const saved = save({
-      ...b,
-      status: 'submitted',
-      submittedAt: b.submittedAt || now,
-    });
-    setEditing(null);
-    setConfirmation(saved);
+  const handleSubmit = async (b: BookingSubmission) => {
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const saved = await submit(b);
+      setEditing(null);
+      setConfirmation(saved);
+    } catch (e) {
+      // Stay on the wizard: the booking has NOT reached HQ.
+      setSubmitError(
+        e instanceof Error
+          ? `Could not send this booking to HQ: ${e.message}`
+          : 'Could not send this booking to HQ. Please try again.',
+      );
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   /* ---------- drawer handlers ---------- */
   const handleStatusChange = (status: BookingStatus) => {
-    if (drawerId) updateStatus(drawerId, status);
+    if (drawerId) void updateStatus(drawerId, status);
   };
   const handleNotesChange = (notes: string) => {
-    if (drawerId) updateNotes(drawerId, notes);
+    if (drawerId) void updateNotes(drawerId, notes);
   };
   const handleEditFromDrawer = (b: BookingSubmission) => {
     setDrawerId(null);
@@ -117,8 +149,18 @@ export default function App() {
     setNav('new');
   };
   const handleDeleteFromDrawer = (b: BookingSubmission) => {
-    remove(b.submissionId);
+    void remove(b.submissionId);
     setDrawerId(null);
+  };
+
+  const handleSignOut = () => {
+    void signOutAdmin().then(() => {
+      setAdminAuthed(false);
+      setEmail('');
+      setEntered(false);
+      setRole('rep');
+      setNav('dashboard');
+    });
   };
 
   if (!entered) {
@@ -159,17 +201,26 @@ export default function App() {
     content = (
       <NewBooking
         initial={editing}
+        submitting={submitting}
+        submitError={submitError}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmit}
         onCancel={() => {
           setEditing(null);
+          setSubmitError('');
           setNav(role === 'admin' ? 'admin' : 'dashboard');
         }}
       />
     );
   } else if (nav === 'admin') {
     content = (
-      <AdminOverview bookings={bookings} onOpen={(b) => setDrawerId(b.submissionId)} onRefresh={refresh} />
+      <AdminOverview
+        bookings={bookings}
+        loading={loading}
+        error={error}
+        onOpen={(b) => setDrawerId(b.submissionId)}
+        onRefresh={() => void refresh()}
+      />
     );
   } else if (nav === 'export') {
     content = <ExportView bookings={bookings} />;
@@ -193,6 +244,7 @@ export default function App() {
       onRoleChange={handleRoleChange}
       personaName={persona.name}
       personaInitials={persona.initials}
+      onSignOut={adminAuthed ? handleSignOut : undefined}
     >
       {content}
       <BookingDrawer

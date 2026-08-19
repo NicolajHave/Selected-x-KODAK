@@ -11,6 +11,8 @@ interface AppShellProps {
   onRoleChange: (role: Role) => void;
   personaName: string;
   personaInitials: string;
+  /** Provided only when an HQ session is active. */
+  onSignOut?: () => void;
   children: ReactNode;
 }
 
@@ -27,6 +29,7 @@ export function AppShell({
   onRoleChange,
   personaName,
   personaInitials,
+  onSignOut,
   children,
 }: AppShellProps) {
   return (
@@ -39,6 +42,7 @@ export function AppShell({
           onRoleChange={onRoleChange}
           personaName={personaName}
           personaInitials={personaInitials}
+          onSignOut={onSignOut}
         />
       )}
       <main>{children}</main>
