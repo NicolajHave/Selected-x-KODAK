@@ -1,8 +1,10 @@
 /// <reference types="vite/client" />
 
 interface ImportMetaEnv {
-  /** Shared password gating the HQ / Admin views. Set in Vercel / .env.local. */
-  readonly VITE_ADMIN_PASSWORD?: string;
+  /** Supabase project URL. Set in Vercel / .env.local. */
+  readonly VITE_SUPABASE_URL?: string;
+  /** Supabase publishable key. Safe to ship: RLS limits it to INSERT-only. */
+  readonly VITE_SUPABASE_ANON_KEY?: string;
 }
 
 interface ImportMeta {

@@ -18,14 +18,14 @@ export function ConfirmationScreen({ booking, onNew, onHome, onView }: Confirmat
     <div className="sk-confirm">
       <Eyebrow size="lg">{submitted ? 'Booking submitted' : 'Draft saved'}</Eyebrow>
       <h1 className="sk-h1">
-        {submitted ? 'Saved. HQ will be notified.' : 'Draft saved for later.'}
+        {submitted ? 'Sent to HQ.' : 'Draft saved for later.'}
       </h1>
       <p>
         {submitted
-          ? `Submission ${booking.submissionId} for ${booking.partnerInfo.partnerName} is now in HQ's queue. You'll see the status update on your dashboard.`
+          ? `Submission ${booking.submissionId} for ${booking.partnerInfo.partnerName} has been delivered and is now in HQ's overview.`
           : `Draft ${booking.submissionId} for ${
               booking.partnerInfo.partnerName || 'this partner'
-            } is saved. Reopen it from the dashboard to continue.`}
+            } is saved on this device. Reopen it from the dashboard to continue — it only reaches HQ once you submit it.`}
       </p>
 
       <div className="sk-confirm__facts">

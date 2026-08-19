@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Eyebrow } from './ui/Eyebrow';
 import { Field, TextInput } from './ui/Field';
-import { adminPasswordConfigured, verifyAdmin } from '../utils/auth';
+import { signInAdmin, supabaseConfigured } from '../utils/auth';
 
 interface AdminGateProps {
   defaultEmail?: string;
@@ -11,22 +11,26 @@ interface AdminGateProps {
 }
 
 /**
- * Modal shown when a user tries to enter the HQ / Admin view without having
- * signed in as admin. Validates the authorised email + shared admin password.
+ * Modal shown when a user tries to enter the HQ / Admin view without a session.
+ * Signs in against Supabase Auth; access is granted by the database allowlist.
  */
 export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateProps) {
   const [email, setEmail] = useState(defaultEmail);
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     setError('');
-    if (!adminPasswordConfigured()) {
-      setError('Admin access is not configured yet. Contact the portal owner.');
+    if (!supabaseConfigured) {
+      setError('The portal is not connected to its database yet.');
       return;
     }
-    if (!verifyAdmin(email, password)) {
-      setError('That email or password is not authorised for HQ / Admin.');
+    setBusy(true);
+    const message = await signInAdmin(email, password);
+    setBusy(false);
+    if (message) {
+      setError(message);
       return;
     }
     onSuccess(email.trim());
@@ -48,13 +52,13 @@ export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateP
         <form
           onSubmit={(e) => {
             e.preventDefault();
-            submit();
+            void submit();
           }}
         >
           <Field label="Work email" required>
             <TextInput value={email} onChange={setEmail} type="email" inputMode="email" />
           </Field>
-          <Field label="Admin password" required>
+          <Field label="Password" required>
             <TextInput value={password} onChange={setPassword} type="password" />
           </Field>
           {error && (
@@ -63,11 +67,11 @@ export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateP
             </div>
           )}
           <div className="sk-spread" style={{ marginTop: 16 }}>
-            <Button variant="text" type="button" onClick={onCancel}>
+            <Button variant="text" type="button" onClick={onCancel} disabled={busy}>
               Cancel
             </Button>
-            <Button variant="ink" type="submit">
-              Sign in →
+            <Button variant="ink" type="submit" disabled={busy}>
+              {busy ? 'Signing in…' : 'Sign in →'}
             </Button>
           </div>
         </form>

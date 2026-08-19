@@ -30,8 +30,9 @@ route. All styling is scoped to the app root, so nothing leaks into the host pag
 - Booking detail drawer with status changes and internal HQ notes
 - One-click structured **Excel export** (`.xlsx`)
 
-A demo **role switcher** (Sales Rep / HQ Admin) lives in the header — there is no
-real authentication in this version.
+Sales reps use the portal without signing in — they only ever submit bookings.
+The HQ / Admin views require a real sign-in and are limited to an allowlist of
+HQ users held in the database.
 
 ---
 
@@ -40,7 +41,7 @@ real authentication in this version.
 - **React 18 + TypeScript + Vite**
 - **Scoped CSS** — all tokens and rules namespaced under `.sk-portal` (no global leakage)
 - **Local state** via React hooks
-- **localStorage** persistence behind a repository abstraction (no backend required)
+- **Supabase** (Postgres + Auth) for the shared booking store
 - **[`xlsx`](https://www.npmjs.com/package/xlsx)** for Excel export
 - No tracking scripts, no analytics
 
@@ -105,21 +106,41 @@ The app is designed to be embedded with zero impact on the host page:
 
 ---
 
-## Replacing localStorage with a real backend
+## Data & access model
 
-Persistence is isolated behind a single seam so the UI never changes when you add
-an API.
+Bookings live in Supabase (Postgres), so a submission made on any rep's machine
+reaches HQ. Two env vars configure it — see `.env.example`:
 
-- **`src/data/repository.ts`** defines the `BookingRepository` interface and ships a
-  `LocalStorageBookingRepository`. To go live, implement the same interface against
-  your API and export it as `bookingRepository`.
-- **`src/hooks/useBookings.ts`** is the only consumer of the repository. The methods
-  (`list`, `get`, `upsert`, `remove`) are written to be trivially converted to
-  `async`/`await` — make them return Promises and await them in the hook.
-- The domain types in **`src/types/index.ts`** are storage-agnostic and map cleanly
-  to a REST/GraphQL schema (one resource: `BookingSubmission`).
+```
+VITE_SUPABASE_URL=…
+VITE_SUPABASE_ANON_KEY=…
+```
 
-No component imports `localStorage` directly.
+**Why the publishable key is safe to ship.** Row-level security on
+`kodak_bookings` grants the anonymous role `INSERT` and nothing else. It cannot
+`SELECT`, `UPDATE` or `DELETE`, so partner contact data cannot be read with the
+key that ships in the browser bundle. Listing and managing bookings requires a
+Supabase Auth session whose email appears in the `kodak_admins` table; that check
+runs in the database (`kodak_is_admin()`), not in client code.
+
+**Where things live**
+
+- **`src/data/remoteBookings.ts`** — all server reads/writes, mapping rows to
+  `BookingSubmission`.
+- **`src/data/repository.ts`** — local storage, used only for a rep's own drafts
+  and their local history. Drafts never leave the device until submitted.
+- **`src/hooks/useBookings.ts`** — role-aware: reps submit to the server, HQ reads
+  from it. A failed submit surfaces an error rather than looking like a success.
+- **`src/utils/auth.ts`** — Supabase Auth sign-in for HQ.
+
+**Granting HQ access to someone new**
+
+```sql
+insert into public.kodak_admins (email) values ('someone@bestseller.com');
+```
+
+They also need a Supabase Auth user (Dashboard → Authentication → Users → Add
+user, with *Auto Confirm* enabled).
 
 ---
 
@@ -172,6 +193,8 @@ UI, JetBrains Mono for data. Flat surfaces, 1px hairlines, ALL-CAPS eyebrows.
 
 ## Notes
 
-- Seed data is clearly **demo content** and is written to localStorage on first load.
-- Cost figures and partner names in seed data are illustrative.
-- This MVP intentionally has no auth; the role switcher is for demonstration only.
+- The store ships empty; there is no demo content.
+- Sales reps are intentionally not asked to sign in. Their drafts stay on their
+  own device; only submitted bookings are sent to HQ.
+- Because reps are anonymous, the `salesRepName` / `salesRepEmail` on a booking
+  are self-declared and not verified.

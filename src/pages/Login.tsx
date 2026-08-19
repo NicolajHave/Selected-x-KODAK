@@ -5,7 +5,7 @@ import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 import { Field, RadioGroup, TextInput } from '../components/ui/Field';
 import { asset } from '../utils/asset';
-import { adminPasswordConfigured, verifyAdmin } from '../utils/auth';
+import { signInAdmin, supabaseConfigured } from '../utils/auth';
 
 interface LoginProps {
   onEnter: (role: Role, email: string) => void;
@@ -15,27 +15,31 @@ interface LoginProps {
  * Entry screen.
  *
  * Sales Rep access is open — enter a work email and continue. The HQ / Admin
- * view is gated by an authorised email + shared admin password (see utils/auth).
+ * view requires a real sign-in against Supabase Auth (see utils/auth).
  */
 export function Login({ onEnter }: LoginProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('rep');
   const [password, setPassword] = useState('');
   const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
 
-  const submit = () => {
+  const submit = async () => {
     setError('');
     if (!email.trim()) {
       setError('Please enter your work email.');
       return;
     }
     if (role === 'admin') {
-      if (!adminPasswordConfigured()) {
-        setError('Admin access is not configured yet. Contact the portal owner.');
+      if (!supabaseConfigured) {
+        setError('The portal is not connected to its database yet.');
         return;
       }
-      if (!verifyAdmin(email, password)) {
-        setError('That email or password is not authorised for HQ / Admin.');
+      setBusy(true);
+      const message = await signInAdmin(email, password);
+      setBusy(false);
+      if (message) {
+        setError(message);
         return;
       }
     }
@@ -72,7 +76,7 @@ export function Login({ onEnter }: LoginProps) {
             <form
               onSubmit={(e) => {
                 e.preventDefault();
-                submit();
+                void submit();
               }}
             >
               <Field label="Work email" required>
@@ -92,7 +96,7 @@ export function Login({ onEnter }: LoginProps) {
                 />
               </Field>
               {role === 'admin' && (
-                <Field label="Admin password" required>
+                <Field label="Password" required>
                   <TextInput value={password} onChange={setPassword} type="password" />
                 </Field>
               )}
@@ -105,8 +109,8 @@ export function Login({ onEnter }: LoginProps) {
                 <Button variant="text" type="button">
                   Request access
                 </Button>
-                <Button variant="ink" type="submit">
-                  Continue →
+                <Button variant="ink" type="submit" disabled={busy}>
+                  {busy ? 'Signing in…' : 'Continue →'}
                 </Button>
               </div>
             </form>

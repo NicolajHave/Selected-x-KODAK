@@ -1,34 +1,60 @@
 /**
- * Lightweight admin access gate.
+ * HQ / Admin authentication.
  *
- * The Sales Rep experience is open (no sign-in). Only the HQ / Admin views are
- * gated: a user must enter an authorised email AND the shared admin password.
- *
- * This is an access gate for an internal tool, not bank-grade security: because
- * the app has no backend, the password is compared in the browser. It is read
- * from the `VITE_ADMIN_PASSWORD` build-time env var (set in Vercel / .env.local)
- * so it is never committed to the repository. Anyone with the deployed bundle
- * can in principle read it, so do not reuse a sensitive password here. For real
- * server-side auth, move this check behind an API (e.g. Supabase).
+ * Sales reps are not signed in — they only ever submit bookings, which the
+ * database allows anonymously (INSERT-only). Reading and managing bookings
+ * requires a real Supabase Auth session whose email is on the `kodak_admins`
+ * allowlist; that check runs in the database, not in the browser, so it cannot
+ * be bypassed by editing client code.
  */
+import { supabase, supabaseConfigured } from '../data/supabaseClient';
 
-/** Emails allowed to access the HQ / Admin views. */
-const ADMIN_EMAILS = ['nicolaj.ostergaard@bestseller.com'];
+export { supabaseConfigured };
 
-export function isAdminEmail(email: string): boolean {
-  return ADMIN_EMAILS.includes(email.trim().toLowerCase());
+export interface AdminSession {
+  email: string;
 }
 
-/** True when an admin password has been configured at build time. */
-export function adminPasswordConfigured(): boolean {
-  return Boolean(import.meta.env.VITE_ADMIN_PASSWORD);
+/** Sign in an HQ user. Returns an error message, or null on success. */
+export async function signInAdmin(
+  email: string,
+  password: string,
+): Promise<string | null> {
+  if (!supabase) return 'The portal is not connected to its database yet.';
+
+  const { data, error } = await supabase.auth.signInWithPassword({
+    email: email.trim(),
+    password,
+  });
+  if (error) return 'That email or password is not correct.';
+
+  const authorised = await isAdmin();
+  if (!authorised) {
+    await supabase.auth.signOut();
+    return 'That account does not have HQ access.';
+  }
+  return data.user ? null : 'Sign-in failed. Please try again.';
 }
 
-/** Validate an HQ / Admin sign-in attempt. */
-export function verifyAdmin(email: string, password: string): boolean {
-  const expected = import.meta.env.VITE_ADMIN_PASSWORD;
-  if (!expected) return false;
-  return isAdminEmail(email) && password === expected;
+/** Whether the signed-in user is on the HQ allowlist (checked server-side). */
+export async function isAdmin(): Promise<boolean> {
+  if (!supabase) return false;
+  const { data, error } = await supabase.rpc('kodak_is_admin');
+  if (error) return false;
+  return data === true;
+}
+
+/** The current admin session, or null when nobody is signed in. */
+export async function currentAdmin(): Promise<AdminSession | null> {
+  if (!supabase) return null;
+  const { data } = await supabase.auth.getSession();
+  const email = data.session?.user?.email;
+  if (!email) return null;
+  return (await isAdmin()) ? { email } : null;
+}
+
+export async function signOutAdmin(): Promise<void> {
+  await supabase?.auth.signOut();
 }
 
 /** Derive a display persona (name + initials) from an email address. */

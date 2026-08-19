@@ -12,6 +12,8 @@ interface AdminOverviewProps {
   bookings: BookingSubmission[];
   onOpen: (b: BookingSubmission) => void;
   onRefresh: () => void;
+  loading?: boolean;
+  error?: string;
 }
 
 function matches(b: BookingSubmission, f: BookingFilters): boolean {
@@ -35,7 +37,13 @@ function matches(b: BookingSubmission, f: BookingFilters): boolean {
 }
 
 /** HQ / Admin overview — filterable master table + export + status control. */
-export function AdminOverview({ bookings, onOpen, onRefresh }: AdminOverviewProps) {
+export function AdminOverview({
+  bookings,
+  onOpen,
+  onRefresh,
+  loading = false,
+  error = '',
+}: AdminOverviewProps) {
   const [filters, setFilters] = useState<BookingFilters>(EMPTY_FILTERS);
 
   const markets = useMemo(
@@ -71,12 +79,18 @@ export function AdminOverview({ bookings, onOpen, onRefresh }: AdminOverviewProp
           <p>Submissions awaiting review, across every market and sales rep.</p>
         </div>
         <div className="sk-row">
-          <Button variant="ghost" onClick={onRefresh}>
-            ⟳ Refresh
+          <Button variant="ghost" onClick={onRefresh} disabled={loading}>
+            {loading ? '⟳ Loading…' : '⟳ Refresh'}
           </Button>
           <ExportButton bookings={filtered} />
         </div>
       </div>
+
+      {error && (
+        <div className="sk-login__error" role="alert" style={{ marginBottom: 20 }}>
+          {error}
+        </div>
+      )}
 
       <div className="sk-kpis" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <DashboardCard label="Submissions" value={filtered.length} hint={`${bookings.length} total`} />
