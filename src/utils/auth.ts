@@ -57,13 +57,19 @@ export async function signOutAdmin(): Promise<void> {
   await supabase?.auth.signOut();
 }
 
-/** Derive a display persona (name + initials) from an email address. */
+/**
+ * Derive a display persona (name + initials) from an email address.
+ *
+ * The email is the single source of truth for who a rep is — the name is never
+ * typed by hand — so one person always appears as exactly one value in filters
+ * and exports. Matches the SQL used to normalise existing rows.
+ */
 export function personaFromEmail(email: string): {
   name: string;
   initials: string;
   email: string;
 } {
-  const trimmed = email.trim();
+  const trimmed = email.trim().toLowerCase();
   const local = trimmed.split('@')[0] || 'user';
   const parts = local.split(/[._-]+/).filter(Boolean);
   const name =

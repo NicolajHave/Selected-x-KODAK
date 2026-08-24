@@ -19,6 +19,7 @@ import { ActivationCard } from '../components/ActivationCard';
 import { ReviewSummary } from '../components/ReviewSummary';
 import { ActivationDetailBlock } from './booking/ActivationDetailFields';
 import { emptyDetailFor } from '../utils/booking';
+import { personaFromEmail } from '../utils/auth';
 import {
   hasErrors,
   validateDetails,
@@ -68,6 +69,13 @@ export function NewBooking({
         next.selectedActivations = next.selectedActivations.filter(
           (t) => t !== 'small_activation_package',
         );
+      }
+      // The rep's name is always derived from their email, never typed, so one
+      // person can't end up as several different values in filters and exports.
+      if (field === 'salesRepEmail') {
+        next.partnerInfo.salesRepName = value.trim()
+          ? personaFromEmail(value).name
+          : '';
       }
       return next;
     });
@@ -217,13 +225,6 @@ export function NewBooking({
                 onChange={(v) => setPartner('city', v)}
               />
             </Field>
-            <Field label="Sales rep name" required error={errors.salesRepName}>
-              <TextInput
-                value={booking.partnerInfo.salesRepName}
-                onChange={(v) => setPartner('salesRepName', v)}
-                invalid={!!errors.salesRepName}
-              />
-            </Field>
             <Field label="Sales rep email" required error={errors.salesRepEmail}>
               <TextInput
                 value={booking.partnerInfo.salesRepEmail}
@@ -232,6 +233,11 @@ export function NewBooking({
                 inputMode="email"
                 invalid={!!errors.salesRepEmail}
               />
+            </Field>
+            <Field label="Sales rep name" hint="Taken from your email address.">
+              <div className="sk-defval" style={{ fontSize: 14, paddingTop: 4 }}>
+                {booking.partnerInfo.salesRepName || '—'}
+              </div>
             </Field>
             <Field label="Partner contact person">
               <TextInput
