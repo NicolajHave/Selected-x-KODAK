@@ -20,7 +20,7 @@ export function validatePartner(b: BookingSubmission): Errors {
   if (p.market === MARKET_OTHER && !p.marketOther.trim()) {
     e.marketOther = 'Enter the market name.';
   }
-  if (!p.salesRepName.trim()) e.salesRepName = 'This field is needed before you can submit.';
+  // salesRepName is derived from salesRepEmail, so it needs no separate check.
   if (!p.salesRepEmail.trim()) {
     e.salesRepEmail = 'This field is needed before you can submit.';
   } else if (!EMAIL_RE.test(p.salesRepEmail.trim())) {
