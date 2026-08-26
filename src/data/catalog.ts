@@ -174,6 +174,7 @@ export const MARKETS: { value: string; label: string }[] = [
   { value: 'GR', label: 'Greece (GR)' },
   { value: 'IE', label: 'Ireland (IE)' },
   { value: 'IT', label: 'Italy (IT)' },
+  { value: 'LT', label: 'Lithuania (LT)' },
   { value: 'NL', label: 'Netherlands (NL)' },
   { value: 'NO', label: 'Norway (NO)' },
   { value: 'PT', label: 'Portugal (PT)' },
