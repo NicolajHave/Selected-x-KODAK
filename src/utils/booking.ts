@@ -30,6 +30,22 @@ export function emptyPartnerInfo(
   };
 }
 
+/**
+ * Strip stray leading/trailing whitespace from every partner field.
+ *
+ * A trailing space is invisible in the form but makes the same partner, store
+ * or contact show up as two different values in the admin filters and the
+ * export, so bookings are cleaned on their way to HQ.
+ */
+export function trimPartnerInfo(p: PartnerInfo): PartnerInfo {
+  const out = {} as PartnerInfo;
+  for (const [key, value] of Object.entries(p)) {
+    out[key as keyof PartnerInfo] =
+      typeof value === 'string' ? value.trim() : value;
+  }
+  return out;
+}
+
 export const emptyHeroPopup = (): HeroPopupDetails => ({
   requestedQuantity: '',
   preferredDeliveryWindow: '',

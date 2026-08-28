@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { validateForSubmit, validatePartner } from './validation';
-import { emptyBooking, emptyHeroPopup } from './booking';
+import { emptyBooking, emptyHeroPopup, emptyPartnerInfo, trimPartnerInfo } from './booking';
 import type { BookingSubmission } from '../types';
 
 function baseBooking(): BookingSubmission {
@@ -64,5 +64,21 @@ describe('validateForSubmit', () => {
       hero_popup: { ...emptyHeroPopup(), requestedQuantity: '1' },
     };
     expect(Object.keys(validateForSubmit(b))).toHaveLength(0);
+  });
+});
+
+describe('trimPartnerInfo', () => {
+  it('strips stray whitespace so one partner is not two values', () => {
+    const p = emptyPartnerInfo({
+      partnerName: 'Angeloz ',
+      storeName: '  Mode Funk',
+      city: 'Aalen ',
+      partnerContactPerson: 'MARINA ',
+    });
+    const t = trimPartnerInfo(p);
+    expect(t.partnerName).toBe('Angeloz');
+    expect(t.storeName).toBe('Mode Funk');
+    expect(t.city).toBe('Aalen');
+    expect(t.partnerContactPerson).toBe('MARINA');
   });
 });
