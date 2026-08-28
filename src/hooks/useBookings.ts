@@ -1,6 +1,7 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { BookingStatus, BookingSubmission, Role } from '../types';
 import { bookingRepository } from '../data/repository';
+import { trimPartnerInfo } from '../utils/booking';
 import {
   deleteBooking,
   listBookings,
@@ -59,6 +60,7 @@ export function useBookings(role: Role) {
       const now = new Date().toISOString();
       const toSend: BookingSubmission = {
         ...booking,
+        partnerInfo: trimPartnerInfo(booking.partnerInfo),
         status: 'submitted',
         submittedAt: booking.submittedAt || now,
         updatedAt: now,
