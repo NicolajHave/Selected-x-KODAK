@@ -9,7 +9,7 @@
  * layer, not these types or the UI.
  */
 
-/** Who is operating the portal. Rep access is open; admin is password-gated. */
+/** Who is operating the portal. Rep access is open; admin is email-allowlisted. */
 export type Role = 'rep' | 'admin';
 
 /** Partner customer classification (Step 2 of the wizard). */

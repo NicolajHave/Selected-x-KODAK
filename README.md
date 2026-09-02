@@ -116,12 +116,23 @@ VITE_SUPABASE_URL=…
 VITE_SUPABASE_ANON_KEY=…
 ```
 
-**Why the publishable key is safe to ship.** Row-level security on
-`kodak_bookings` grants the anonymous role `INSERT` and nothing else. It cannot
-`SELECT`, `UPDATE` or `DELETE`, so partner contact data cannot be read with the
-key that ships in the browser bundle. Listing and managing bookings requires a
-Supabase Auth session whose email appears in the `kodak_admins` table; that check
-runs in the database (`kodak_is_admin()`), not in client code.
+### ⚠️ Access is convenience-first, not secure
+
+There is **no password and no authentication**. Entering an email that appears in
+the `kodak_admins` table opens the HQ views. That is an identity *claim*, not
+proof, so anyone who knows an allowlisted address can get in.
+
+Because there is no session to authorise against, row-level security on
+`kodak_bookings` is open to the publishable key for `SELECT`, `INSERT`, `UPDATE`
+and `DELETE`. That key ships in this app's browser bundle — and in the other app
+sharing this Supabase project — so **every booking, including partner contact
+details, is readable and deletable by anyone holding it.**
+
+This was a deliberate trade for day-to-day convenience. To tighten it, restore
+the auth-based policies from before the `kodak_admin_without_authentication`
+migration (they required `auth.jwt() -> email` to be present in `kodak_admins`,
+checked by `kodak_is_admin()`) and sign HQ users in properly — a one-time email
+code avoids passwords without giving up the guarantee.
 
 **Where things live**
 
@@ -131,16 +142,19 @@ runs in the database (`kodak_is_admin()`), not in client code.
   and their local history. Drafts never leave the device until submitted.
 - **`src/hooks/useBookings.ts`** — role-aware: reps submit to the server, HQ reads
   from it. A failed submit surfaces an error rather than looking like a success.
-- **`src/utils/auth.ts`** — Supabase Auth sign-in for HQ.
+- **`src/utils/auth.ts`** — the HQ allowlist check.
 
-**Granting HQ access to someone new**
+**Granting HQ access to someone new** — no code change or deploy needed:
 
 ```sql
 insert into public.kodak_admins (email) values ('someone@bestseller.com');
 ```
 
-They also need a Supabase Auth user (Dashboard → Authentication → Users → Add
-user, with *Auto Confirm* enabled).
+**Removing access:**
+
+```sql
+delete from public.kodak_admins where email = 'someone@bestseller.com';
+```
 
 ---
 

@@ -5,7 +5,7 @@ import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 import { Field, RadioGroup, TextInput } from '../components/ui/Field';
 import { asset } from '../utils/asset';
-import { signInAdmin, supabaseConfigured } from '../utils/auth';
+import { isAdminEmail, supabaseConfigured } from '../utils/auth';
 
 interface LoginProps {
   onEnter: (role: Role, email: string) => void;
@@ -14,13 +14,12 @@ interface LoginProps {
 /**
  * Entry screen.
  *
- * Sales Rep access is open — enter a work email and continue. The HQ / Admin
- * view requires a real sign-in against Supabase Auth (see utils/auth).
+ * Both roles are entered with just a work email. For HQ / Admin the address
+ * must be on the allowlist; there is no password (see utils/auth).
  */
 export function Login({ onEnter }: LoginProps) {
   const [email, setEmail] = useState('');
   const [role, setRole] = useState<Role>('rep');
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -36,10 +35,10 @@ export function Login({ onEnter }: LoginProps) {
         return;
       }
       setBusy(true);
-      const message = await signInAdmin(email, password);
+      const allowed = await isAdminEmail(email);
       setBusy(false);
-      if (message) {
-        setError(message);
+      if (!allowed) {
+        setError('That email does not have HQ access.');
         return;
       }
     }
@@ -82,7 +81,7 @@ export function Login({ onEnter }: LoginProps) {
               <Field label="Work email" required>
                 <TextInput value={email} onChange={setEmail} type="email" inputMode="email" />
               </Field>
-              <Field label="Access as" hint="HQ / Admin requires a password.">
+              <Field label="Access as" hint="HQ / Admin is limited to approved emails.">
                 <RadioGroup
                   value={role}
                   onChange={(v) => {
@@ -95,11 +94,6 @@ export function Login({ onEnter }: LoginProps) {
                   ]}
                 />
               </Field>
-              {role === 'admin' && (
-                <Field label="Password" required>
-                  <TextInput value={password} onChange={setPassword} type="password" />
-                </Field>
-              )}
               {error && (
                 <div className="sk-login__error" role="alert">
                   {error}
@@ -110,7 +104,7 @@ export function Login({ onEnter }: LoginProps) {
                   Request access
                 </Button>
                 <Button variant="ink" type="submit" disabled={busy}>
-                  {busy ? 'Signing in…' : 'Continue →'}
+                  {busy ? 'Checking…' : 'Continue →'}
                 </Button>
               </div>
             </form>
