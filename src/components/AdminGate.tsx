@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { Button } from './ui/Button';
 import { Eyebrow } from './ui/Eyebrow';
 import { Field, TextInput } from './ui/Field';
-import { signInAdmin, supabaseConfigured } from '../utils/auth';
+import { isAdminEmail, supabaseConfigured } from '../utils/auth';
 
 interface AdminGateProps {
   defaultEmail?: string;
@@ -11,12 +11,11 @@ interface AdminGateProps {
 }
 
 /**
- * Modal shown when a user tries to enter the HQ / Admin view without a session.
- * Signs in against Supabase Auth; access is granted by the database allowlist.
+ * Shown when someone switches to the HQ / Admin view. Access is granted on the
+ * email alone — it must be on the allowlist, but there is no password.
  */
 export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateProps) {
   const [email, setEmail] = useState(defaultEmail);
-  const [password, setPassword] = useState('');
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
 
@@ -27,10 +26,10 @@ export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateP
       return;
     }
     setBusy(true);
-    const message = await signInAdmin(email, password);
+    const allowed = await isAdminEmail(email);
     setBusy(false);
-    if (message) {
-      setError(message);
+    if (!allowed) {
+      setError('That email does not have HQ access.');
       return;
     }
     onSuccess(email.trim());
@@ -43,11 +42,11 @@ export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateP
         if (e.target === e.currentTarget) onCancel();
       }}
     >
-      <div className="sk-modal" role="dialog" aria-modal="true" aria-label="HQ / Admin sign in">
+      <div className="sk-modal" role="dialog" aria-modal="true" aria-label="HQ / Admin access">
         <Eyebrow size="lg">Restricted</Eyebrow>
-        <h2 className="sk-drawer__title">HQ / Admin sign in</h2>
+        <h2 className="sk-drawer__title">HQ / Admin access</h2>
         <p style={{ color: 'var(--fg-3)', fontSize: 14, margin: '4px 0 18px' }}>
-          This area is limited to authorised HQ users.
+          Enter your work email. This area is limited to approved HQ addresses.
         </p>
         <form
           onSubmit={(e) => {
@@ -57,9 +56,6 @@ export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateP
         >
           <Field label="Work email" required>
             <TextInput value={email} onChange={setEmail} type="email" inputMode="email" />
-          </Field>
-          <Field label="Password" required>
-            <TextInput value={password} onChange={setPassword} type="password" />
           </Field>
           {error && (
             <div className="sk-login__error" role="alert">
@@ -71,7 +67,7 @@ export function AdminGate({ defaultEmail = '', onSuccess, onCancel }: AdminGateP
               Cancel
             </Button>
             <Button variant="ink" type="submit" disabled={busy}>
-              {busy ? 'Signing in…' : 'Sign in →'}
+              {busy ? 'Checking…' : 'Continue →'}
             </Button>
           </div>
         </form>

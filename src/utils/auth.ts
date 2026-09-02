@@ -1,60 +1,63 @@
 /**
- * HQ / Admin authentication.
+ * HQ / Admin access.
  *
- * Sales reps are not signed in — they only ever submit bookings, which the
- * database allows anonymously (INSERT-only). Reading and managing bookings
- * requires a real Supabase Auth session whose email is on the `kodak_admins`
- * allowlist; that check runs in the database, not in the browser, so it cannot
- * be bypassed by editing client code.
+ * Access is granted purely on the email address entered: if it appears in the
+ * `kodak_admins` table, the portal opens the HQ views. There is no password and
+ * no Supabase Auth session, so this is an identity *claim*, not proof — anyone
+ * who knows an allowlisted address can enter, and the database is open to the
+ * publishable key accordingly. This is a deliberate trade for convenience.
+ *
+ * To tighten it later, restore the auth-based RLS policies (see the
+ * `kodak_admin_without_authentication` migration) and sign users in properly.
+ *
+ * Admins are managed in the database, so adding one needs no code change:
+ *   insert into public.kodak_admins (email) values ('someone@bestseller.com');
  */
 import { supabase, supabaseConfigured } from '../data/supabaseClient';
 
 export { supabaseConfigured };
 
-export interface AdminSession {
-  email: string;
-}
+const REMEMBERED_KEY = 'sk-portal.admin-email.v1';
 
-/** Sign in an HQ user. Returns an error message, or null on success. */
-export async function signInAdmin(
-  email: string,
-  password: string,
-): Promise<string | null> {
-  if (!supabase) return 'The portal is not connected to its database yet.';
-
-  const { data, error } = await supabase.auth.signInWithPassword({
-    email: email.trim(),
-    password,
-  });
-  if (error) return 'That email or password is not correct.';
-
-  const authorised = await isAdmin();
-  if (!authorised) {
-    await supabase.auth.signOut();
-    return 'That account does not have HQ access.';
-  }
-  return data.user ? null : 'Sign-in failed. Please try again.';
-}
-
-/** Whether the signed-in user is on the HQ allowlist (checked server-side). */
-export async function isAdmin(): Promise<boolean> {
+/** Whether this email is on the HQ allowlist. */
+export async function isAdminEmail(email: string): Promise<boolean> {
   if (!supabase) return false;
-  const { data, error } = await supabase.rpc('kodak_is_admin');
+  const normalised = email.trim().toLowerCase();
+  if (!normalised) return false;
+
+  const { data, error } = await supabase
+    .from('kodak_admins')
+    .select('email')
+    .ilike('email', normalised)
+    .limit(1);
   if (error) return false;
-  return data === true;
+  return (data?.length ?? 0) > 0;
 }
 
-/** The current admin session, or null when nobody is signed in. */
-export async function currentAdmin(): Promise<AdminSession | null> {
-  if (!supabase) return null;
-  const { data } = await supabase.auth.getSession();
-  const email = data.session?.user?.email;
-  if (!email) return null;
-  return (await isAdmin()) ? { email } : null;
+/** Remember the signed-in admin so a page refresh doesn't ask again. */
+export function rememberAdmin(email: string): void {
+  try {
+    window.localStorage.setItem(REMEMBERED_KEY, email.trim().toLowerCase());
+  } catch {
+    /* storage unavailable — the admin just re-enters their email */
+  }
 }
 
-export async function signOutAdmin(): Promise<void> {
-  await supabase?.auth.signOut();
+export function forgetAdmin(): void {
+  try {
+    window.localStorage.removeItem(REMEMBERED_KEY);
+  } catch {
+    /* ignore */
+  }
+}
+
+/** The email remembered from a previous visit, if any. */
+export function rememberedAdmin(): string {
+  try {
+    return window.localStorage.getItem(REMEMBERED_KEY) || '';
+  } catch {
+    return '';
+  }
 }
 
 /**

@@ -12,7 +12,13 @@ import { ConfirmationScreen } from './components/ConfirmationScreen';
 import { AdminGate } from './components/AdminGate';
 import { useBookings } from './hooks/useBookings';
 import { emptyBooking } from './utils/booking';
-import { currentAdmin, personaFromEmail, signOutAdmin } from './utils/auth';
+import {
+  forgetAdmin,
+  isAdminEmail,
+  personaFromEmail,
+  rememberAdmin,
+  rememberedAdmin,
+} from './utils/auth';
 
 export default function App() {
   const [entered, setEntered] = useState(false);
@@ -41,12 +47,16 @@ export default function App() {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
 
-  // Reuse an existing HQ session so admins are not asked to sign in twice.
+  // Remember an approved HQ email so a page refresh doesn't ask again.
   useEffect(() => {
-    void currentAdmin().then((session) => {
-      if (session) {
+    const saved = rememberedAdmin();
+    if (!saved) return;
+    void isAdminEmail(saved).then((allowed) => {
+      if (allowed) {
         setAdminAuthed(true);
-        setEmail((current) => current || session.email);
+        setEmail((current) => current || saved);
+      } else {
+        forgetAdmin();
       }
     });
   }, []);
@@ -97,7 +107,10 @@ export default function App() {
   const handleEnter = (nextRole: Role, nextEmail: string) => {
     setEmail(nextEmail);
     setRole(nextRole);
-    if (nextRole === 'admin') setAdminAuthed(true);
+    if (nextRole === 'admin') {
+      setAdminAuthed(true);
+      rememberAdmin(nextEmail);
+    }
     setNav(nextRole === 'admin' ? 'admin' : 'dashboard');
     setEntered(true);
   };
@@ -105,6 +118,7 @@ export default function App() {
   const handleAdminGateSuccess = (adminEmail: string) => {
     setEmail(adminEmail);
     setAdminAuthed(true);
+    rememberAdmin(adminEmail);
     setShowAdminGate(false);
     enterRole('admin');
   };
@@ -154,13 +168,12 @@ export default function App() {
   };
 
   const handleSignOut = () => {
-    void signOutAdmin().then(() => {
-      setAdminAuthed(false);
-      setEmail('');
-      setEntered(false);
-      setRole('rep');
-      setNav('dashboard');
-    });
+    forgetAdmin();
+    setAdminAuthed(false);
+    setEmail('');
+    setEntered(false);
+    setRole('rep');
+    setNav('dashboard');
   };
 
   if (!entered) {
