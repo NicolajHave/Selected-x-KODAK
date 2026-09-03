@@ -5,6 +5,9 @@ node_modules
 dist
 dist-ssr
 
+# Generated reports (regenerated from live booking data, not source)
+Selected-x-Kodak-Booking-Overview.pdf
+
 # Local env files (never commit secrets)
 .env
 .env.local
