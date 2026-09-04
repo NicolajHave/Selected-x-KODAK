@@ -20,6 +20,7 @@ interface BookingRow {
   submission_id: string;
   partner_info: PartnerInfo;
   selected_activations: ActivationSelection;
+  selected_images: string[];
   activation_details: ActivationDetails;
   status: BookingStatus;
   created_by: string;
@@ -34,6 +35,7 @@ function toBooking(row: BookingRow): BookingSubmission {
     submissionId: row.submission_id,
     partnerInfo: row.partner_info,
     selectedActivations: row.selected_activations ?? [],
+    selectedImages: row.selected_images ?? [],
     activationDetails: row.activation_details ?? {},
     status: row.status,
     createdBy: row.created_by ?? '',
@@ -49,6 +51,7 @@ function toRow(b: BookingSubmission): BookingRow {
     submission_id: b.submissionId,
     partner_info: b.partnerInfo,
     selected_activations: b.selectedActivations,
+    selected_images: b.selectedImages ?? [],
     activation_details: b.activationDetails,
     status: b.status,
     created_by: b.createdBy,
@@ -86,6 +89,29 @@ export async function updateBookingStatus(
   const { error } = await requireSupabase()
     .from(TABLE)
     .update({ status, updated_at: new Date().toISOString() })
+    .eq('submission_id', submissionId);
+  if (error) throw new Error(error.message);
+}
+
+/** Bookings submitted by one sales rep, newest first. */
+export async function listBookingsForRep(email: string): Promise<BookingSubmission[]> {
+  const { data, error } = await requireSupabase()
+    .from(TABLE)
+    .select('*')
+    .ilike('partner_info->>salesRepEmail', email.trim())
+    .order('created_at', { ascending: false });
+  if (error) throw new Error(error.message);
+  return (data as BookingRow[]).map(toBooking);
+}
+
+/** Set the campaign images for a booking. Used by reps on their own bookings. */
+export async function updateBookingImages(
+  submissionId: string,
+  selectedImages: string[],
+): Promise<void> {
+  const { error } = await requireSupabase()
+    .from(TABLE)
+    .update({ selected_images: selectedImages, updated_at: new Date().toISOString() })
     .eq('submission_id', submissionId);
   if (error) throw new Error(error.message);
 }

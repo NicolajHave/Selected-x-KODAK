@@ -35,10 +35,11 @@ export default function App() {
     refresh,
     saveDraft,
     submit,
+    updateImages,
     updateStatus,
     updateNotes,
     remove,
-  } = useBookings(role);
+  } = useBookings(role, email);
 
   // Transient flow state
   const [editing, setEditing] = useState<BookingSubmission | null>(null);
@@ -157,6 +158,9 @@ export default function App() {
   const handleNotesChange = (notes: string) => {
     if (drawerId) void updateNotes(drawerId, notes);
   };
+  const handleImagesChange = (images: string[]) => {
+    if (drawerId) void updateImages(drawerId, images);
+  };
   const handleEditFromDrawer = (b: BookingSubmission) => {
     setDrawerId(null);
     setEditing(b);
@@ -266,6 +270,7 @@ export default function App() {
         onClose={() => setDrawerId(null)}
         onStatusChange={handleStatusChange}
         onNotesChange={handleNotesChange}
+        onImagesChange={handleImagesChange}
         onEdit={handleEditFromDrawer}
         onDelete={handleDeleteFromDrawer}
       />

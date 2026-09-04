@@ -345,6 +345,29 @@
   background-color: var(--sk-steel-light);
   border-radius: var(--r-3) var(--r-3) 0 0;
 }
+/* ---------- Campaign image picker ---------- */
+.sk-portal .sk-imggrid{
+  display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;
+}
+.sk-portal .sk-imgcard{
+  display:flex;flex-direction:column;text-align:left;padding:0;cursor:pointer;
+  background:var(--bg-2);border:1px solid var(--rule-1);border-radius:var(--r-3);
+  overflow:hidden;font-family:var(--font-sans);color:var(--fg-1);
+  transition:border-color var(--dur-fast) var(--ease), box-shadow var(--dur-fast) var(--ease);
+}
+.sk-portal .sk-imgcard:hover{border-color:var(--rule-2)}
+.sk-portal .sk-imgcard--on{border-color:var(--sk-ink);box-shadow:inset 0 0 0 1px var(--sk-ink)}
+.sk-portal .sk-imgcard__media{
+  display:block;height:132px;background-size:cover;background-position:center;
+  background-color:var(--sk-steel-light);border-bottom:1px solid var(--rule-1);
+}
+.sk-portal .sk-imgcard__foot{
+  display:flex;align-items:center;justify-content:space-between;gap:8px;padding:9px 11px;
+}
+.sk-portal .sk-imgcard__label{
+  font-size:12px;font-weight:500;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;
+}
+
 .sk-portal .sk-selcard__media--video {
   display: block;
   width: calc(100% + 40px);

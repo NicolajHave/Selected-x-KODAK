@@ -106,6 +106,12 @@ export interface BookingSubmission {
   submissionId: string;
   partnerInfo: PartnerInfo;
   selectedActivations: ActivationSelection;
+  /**
+   * Campaign images chosen for this booking's printed builds (hero pop-up and
+   * campaign element). Stored as file names from the campaign image library.
+   * Empty means HQ applies the default campaign visual.
+   */
+  selectedImages: string[];
   activationDetails: ActivationDetails;
   status: BookingStatus;
   createdAt: string; // ISO timestamp
