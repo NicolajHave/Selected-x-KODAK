@@ -21,6 +21,8 @@ interface BookingDrawerProps {
   onEdit: (booking: BookingSubmission) => void;
   onDelete: (booking: BookingSubmission) => void;
   onImagesChange: (images: string[]) => void;
+  imageDeadline: Date | null;
+  imageError: string;
 }
 
 /** Slide-over drawer with full booking details + admin status controls. */
@@ -33,6 +35,8 @@ export function BookingDrawer({
   onEdit,
   onDelete,
   onImagesChange,
+  imageDeadline,
+  imageError,
 }: BookingDrawerProps) {
   useEffect(() => {
     if (!booking) return;
@@ -177,7 +181,13 @@ export function BookingDrawer({
                 bare
                 selected={b.selectedImages ?? []}
                 onChange={onImagesChange}
+                deadline={imageDeadline}
               />
+              {imageError && (
+                <div className="sk-login__error" role="alert" style={{ marginTop: 12 }}>
+                  {imageError}
+                </div>
+              )}
             </div>
           </>
         )}

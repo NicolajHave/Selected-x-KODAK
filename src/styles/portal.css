@@ -346,6 +346,14 @@
   border-radius: var(--r-3) var(--r-3) 0 0;
 }
 /* ---------- Campaign image picker ---------- */
+.sk-portal .sk-lockbar{
+  display:block;background:var(--sk-kodak-yellow,#F5B301);color:#5A4200;
+  border-radius:var(--r-2);padding:10px 14px;margin-bottom:14px;
+  font-size:12px;line-height:1.5;
+}
+.sk-portal .sk-imgcard--locked{cursor:default;opacity:.92}
+.sk-portal .sk-imgcard--locked:hover{border-color:var(--rule-1)}
+.sk-portal .sk-imgcard--locked.sk-imgcard--on:hover{border-color:var(--sk-ink)}
 .sk-portal .sk-imggrid{
   display:grid;grid-template-columns:repeat(auto-fill,minmax(190px,1fr));gap:14px;
 }
