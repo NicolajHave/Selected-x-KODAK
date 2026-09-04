@@ -47,6 +47,8 @@ interface NewBookingProps {
   submitting?: boolean;
   /** Set when the booking could not be delivered to HQ. */
   submitError?: string;
+  /** When image selection closes. */
+  imageDeadline?: Date | null;
 }
 
 export function NewBooking({
@@ -56,6 +58,7 @@ export function NewBooking({
   onCancel,
   submitting = false,
   submitError = '',
+  imageDeadline = null,
 }: NewBookingProps) {
   const [booking, setBooking] = useState<BookingSubmission>(initial);
   const [step, setStep] = useState(0);
@@ -326,6 +329,7 @@ export function NewBooking({
                 <ImagePicker
                   selected={booking.selectedImages}
                   onChange={(next) => setBooking((b) => ({ ...b, selectedImages: next }))}
+                  deadline={imageDeadline}
                 />
               </FormSection>
             </div>

@@ -12,6 +12,7 @@ import { ConfirmationScreen } from './components/ConfirmationScreen';
 import { AdminGate } from './components/AdminGate';
 import { useBookings } from './hooks/useBookings';
 import { emptyBooking } from './utils/booking';
+import { fetchImageDeadline } from './data/settings';
 import {
   forgetAdmin,
   isAdminEmail,
@@ -47,6 +48,13 @@ export default function App() {
   const [drawerId, setDrawerId] = useState<string | null>(null);
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
+  const [imageDeadline, setImageDeadline] = useState<Date | null>(null);
+  const [imageError, setImageError] = useState('');
+
+  // The database enforces the image deadline; this is only so reps see it.
+  useEffect(() => {
+    void fetchImageDeadline().then(setImageDeadline);
+  }, []);
 
   // Remember an approved HQ email so a page refresh doesn't ask again.
   useEffect(() => {
@@ -159,7 +167,13 @@ export default function App() {
     if (drawerId) void updateNotes(drawerId, notes);
   };
   const handleImagesChange = (images: string[]) => {
-    if (drawerId) void updateImages(drawerId, images);
+    if (!drawerId) return;
+    setImageError('');
+    void updateImages(drawerId, images).catch((e) =>
+      setImageError(
+        e instanceof Error ? e.message : 'Could not save the image selection.',
+      ),
+    );
   };
   const handleEditFromDrawer = (b: BookingSubmission) => {
     setDrawerId(null);
@@ -220,6 +234,7 @@ export default function App() {
         initial={editing}
         submitting={submitting}
         submitError={submitError}
+        imageDeadline={imageDeadline}
         onSaveDraft={handleSaveDraft}
         onSubmit={handleSubmit}
         onCancel={() => {
@@ -271,6 +286,8 @@ export default function App() {
         onStatusChange={handleStatusChange}
         onNotesChange={handleNotesChange}
         onImagesChange={handleImagesChange}
+        imageDeadline={imageDeadline}
+        imageError={imageError}
         onEdit={handleEditFromDrawer}
         onDelete={handleDeleteFromDrawer}
       />
