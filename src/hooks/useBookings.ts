@@ -5,7 +5,9 @@ import { trimPartnerInfo } from '../utils/booking';
 import {
   deleteBooking,
   listBookings,
+  listBookingsForRep,
   submitBooking,
+  updateBookingImages,
   updateBookingNotes,
   updateBookingStatus,
 } from '../data/remoteBookings';
@@ -13,14 +15,14 @@ import {
 /**
  * Bookings for the current role.
  *
- * Sales rep — drafts and their own history live in this browser (they cannot
- * read the shared table), and submitting pushes the booking to HQ. If that push
- * fails the caller is told, so a rep is never left believing HQ received it.
+ * Sales rep — submitted bookings come from the server, matched on the rep's own
+ * email, so they can reopen them from any machine (for example to choose their
+ * campaign images). Drafts stay local until submitted, and a failed submit is
+ * surfaced so a rep is never left believing HQ received it.
  *
- * HQ / Admin — the list comes from the server, so every rep's submission shows
- * up regardless of which machine it was created on.
+ * HQ / Admin — the list is every booking, from every rep and market.
  */
-export function useBookings(role: Role) {
+export function useBookings(role: Role, email = '') {
   const isAdmin = role === 'admin';
 
   const [bookings, setBookings] = useState<BookingSubmission[]>(() =>
@@ -30,20 +32,25 @@ export function useBookings(role: Role) {
   const [error, setError] = useState('');
 
   const refresh = useCallback(async () => {
-    if (!isAdmin) {
-      setBookings(bookingRepository.list());
-      return;
-    }
     setLoading(true);
     setError('');
     try {
-      setBookings(await listBookings());
+      if (isAdmin) {
+        setBookings(await listBookings());
+      } else {
+        // Local drafts, plus everything this rep has already submitted.
+        const drafts = bookingRepository.list().filter((b) => b.status === 'draft');
+        const sent = email ? await listBookingsForRep(email) : [];
+        const seen = new Set(sent.map((b) => b.submissionId));
+        setBookings([...sent, ...drafts.filter((d) => !seen.has(d.submissionId))]);
+      }
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not load bookings.');
+      if (!isAdmin) setBookings(bookingRepository.list());
     } finally {
       setLoading(false);
     }
-  }, [isAdmin]);
+  }, [isAdmin, email]);
 
   useEffect(() => {
     void refresh();
@@ -82,6 +89,15 @@ export function useBookings(role: Role) {
     [refresh],
   );
 
+  /** Set the campaign images on a booking. Available to reps on their own. */
+  const updateImages = useCallback(
+    async (id: string, images: string[]) => {
+      await updateBookingImages(id, images);
+      await refresh();
+    },
+    [refresh],
+  );
+
   const updateNotes = useCallback(
     async (id: string, internalNotes: string) => {
       await updateBookingNotes(id, internalNotes);
@@ -105,6 +121,7 @@ export function useBookings(role: Role) {
     refresh,
     saveDraft,
     submit,
+    updateImages,
     updateStatus,
     updateNotes,
     remove,

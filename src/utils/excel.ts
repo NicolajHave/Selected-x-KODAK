@@ -56,6 +56,9 @@ export function bookingToRow(b: BookingSubmission): Row {
       : '',
     'Small activation package cost owner': owner('small_activation_package'),
 
+    'Campaign images selected': String(b.selectedImages?.length ?? 0),
+    'Campaign image files': (b.selectedImages ?? []).join('; '),
+
     'Delivery window': hero?.preferredDeliveryWindow || '',
     'Additional notes': p.additionalNotes,
     'Created date': formatDate(b.createdAt),
@@ -90,6 +93,8 @@ export const EXPORT_COLUMNS: string[] = [
   'Small activation package selected',
   'Small activation package contents',
   'Small activation package cost owner',
+  'Campaign images selected',
+  'Campaign image files',
   'Delivery window',
   'Additional notes',
   'Created date',

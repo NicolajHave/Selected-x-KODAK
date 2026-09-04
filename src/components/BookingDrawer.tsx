@@ -7,6 +7,10 @@ import { StatusBadge } from './StatusBadge';
 import { Field, Textarea } from './ui/Field';
 import { formatDate, orDash } from '../utils/format';
 import { detailRows } from '../utils/details';
+import { ImagePicker } from './ImagePicker';
+
+/** Activations whose builds carry printed campaign images. */
+const NEEDS_IMAGES = ['hero_popup', 'campaign_element'] as const;
 
 interface BookingDrawerProps {
   booking: BookingSubmission | null;
@@ -16,6 +20,7 @@ interface BookingDrawerProps {
   onNotesChange: (notes: string) => void;
   onEdit: (booking: BookingSubmission) => void;
   onDelete: (booking: BookingSubmission) => void;
+  onImagesChange: (images: string[]) => void;
 }
 
 /** Slide-over drawer with full booking details + admin status controls. */
@@ -27,6 +32,7 @@ export function BookingDrawer({
   onNotesChange,
   onEdit,
   onDelete,
+  onImagesChange,
 }: BookingDrawerProps) {
   useEffect(() => {
     if (!booking) return;
@@ -151,6 +157,30 @@ export function BookingDrawer({
             );
           })}
         </div>
+
+        {/* Campaign images — the rep chooses what gets printed */}
+        {NEEDS_IMAGES.some((t) => b.selectedActivations.includes(t)) && (
+          <>
+            <div className="sk-spread" style={{ alignItems: 'baseline' }}>
+              <Eyebrow size="lg">Campaign images</Eyebrow>
+              <span className="sk-mono" style={{ fontSize: 11, color: 'var(--fg-4)' }}>
+                {b.selectedImages?.length || 0} selected
+              </span>
+            </div>
+            <p style={{ fontSize: 12, color: 'var(--fg-3)', margin: '6px 0 12px', lineHeight: 1.5 }}>
+              {role === 'admin'
+                ? 'Chosen by the sales rep. Empty means the default campaign visual applies.'
+                : 'Pick the images for this booking’s printed builds. Leave empty and HQ applies the default campaign visual. Changes save straight away.'}
+            </p>
+            <div style={{ marginBottom: 20 }}>
+              <ImagePicker
+                bare
+                selected={b.selectedImages ?? []}
+                onChange={onImagesChange}
+              />
+            </div>
+          </>
+        )}
 
         {/* Admin status control */}
         {role === 'admin' && (

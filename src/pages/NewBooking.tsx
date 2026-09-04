@@ -14,10 +14,12 @@ import {
 import { Eyebrow } from '../components/ui/Eyebrow';
 import { Button } from '../components/ui/Button';
 import { StepProgress } from '../components/StepProgress';
+import { FormSection } from '../components/FormSection';
 import { Field, Select, Textarea, TextInput } from '../components/ui/Field';
 import { ActivationCard } from '../components/ActivationCard';
 import { ReviewSummary } from '../components/ReviewSummary';
 import { ActivationDetailBlock } from './booking/ActivationDetailFields';
+import { ImagePicker } from '../components/ImagePicker';
 import { emptyDetailFor } from '../utils/booking';
 import { personaFromEmail } from '../utils/auth';
 import {
@@ -154,6 +156,10 @@ export function NewBooking({
   };
 
   const selectedDefs = ACTIVATIONS.filter((a) => booking.selectedActivations.includes(a.type));
+  /* Only the printed builds carry campaign images. */
+  const needsImages = ['hero_popup', 'campaign_element'].some((t) =>
+    booking.selectedActivations.includes(t as never),
+  );
 
   return (
     <div className="sk-container" style={{ maxWidth: 1100 }}>
@@ -310,6 +316,20 @@ export function NewBooking({
               errors={errors}
             />
           ))}
+
+          {needsImages && (
+            <div className="sk-card" style={{ marginBottom: 18, padding: 24 }}>
+              <FormSection
+                eyebrow="Campaign images"
+                title="Choose the images for your builds"
+              >
+                <ImagePicker
+                  selected={booking.selectedImages}
+                  onChange={(next) => setBooking((b) => ({ ...b, selectedImages: next }))}
+                />
+              </FormSection>
+            </div>
+          )}
         </div>
       )}
 

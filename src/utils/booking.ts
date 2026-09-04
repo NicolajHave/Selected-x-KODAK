@@ -102,6 +102,7 @@ export function emptyBooking(createdBy: string, repEmail: string): BookingSubmis
       salesRepEmail: repEmail,
     }),
     selectedActivations: [],
+    selectedImages: [],
     activationDetails: {},
     status: 'draft',
     createdAt: now,
