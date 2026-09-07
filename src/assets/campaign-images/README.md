@@ -15,8 +15,10 @@ here becomes selectable by sales reps on their bookings — no code change neede
 - **Filename becomes the label** shown to reps, so name them readably:
   `kodak-red-jacket-portrait.jpg` shows as *"Kodak red jacket portrait"*.
   Use hyphens or underscores between words; avoid spaces.
-- **Size:** keep each file under ~2 MB. They are bundled into the app, so very
-  large files slow the portal down for everyone.
+- **Size:** export at roughly **1600 px on the longest edge**, which lands around
+  200–350 KB per file. The picker shows the whole library at once, so a rep
+  downloads every image in this folder the moment they open it. Full-resolution
+  files from the shoot are ~3 MB each and make that unusable on a phone.
 - **Orientation:** the picker shows them in a 4:3 thumbnail. Portrait images
   work, they are just letterboxed.
 
