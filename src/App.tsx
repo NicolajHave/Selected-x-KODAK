@@ -38,6 +38,7 @@ export default function App() {
     submit,
     updateImages,
     updateStatus,
+    updateStatuses,
     updateNotes,
     remove,
   } = useBookings(role, email);
@@ -252,6 +253,7 @@ export default function App() {
         error={error}
         onOpen={(b) => setDrawerId(b.submissionId)}
         onRefresh={() => void refresh()}
+        onBulkStatus={updateStatuses}
       />
     );
   } else if (nav === 'export') {

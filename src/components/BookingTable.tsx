@@ -13,20 +13,50 @@ interface BookingTableProps {
   bookings: BookingSubmission[];
   onOpen: (b: BookingSubmission) => void;
   variant?: 'rep' | 'admin';
+  /** Submission ids ticked for a bulk action. Omit to hide the checkboxes. */
+  selected?: Set<string>;
+  onToggle?: (submissionId: string) => void;
+  onToggleAll?: () => void;
 }
 
 /** Dense overview table — top + bottom rule only, mono right-aligned figures. */
-export function BookingTable({ bookings, onOpen, variant = 'rep' }: BookingTableProps) {
+export function BookingTable({
+  bookings,
+  onOpen,
+  variant = 'rep',
+  selected,
+  onToggle,
+  onToggleAll,
+}: BookingTableProps) {
   if (bookings.length === 0) {
     return <div className="sk-empty">No submissions yet. Start one when a partner commits.</div>;
   }
 
   if (variant === 'admin') {
+    const selectable = Boolean(selected && onToggle && onToggleAll);
+    const allTicked = selectable && bookings.every((b) => selected!.has(b.submissionId));
+    const someTicked = selectable && !allTicked && bookings.some((b) => selected!.has(b.submissionId));
+
     return (
       <div className="sk-tablewrap">
         <table className="sk-table">
           <thead>
             <tr>
+              {selectable && (
+                <th className="sk-tick-col">
+                  <input
+                    type="checkbox"
+                    checked={allTicked}
+                    ref={(el) => {
+                      if (el) el.indeterminate = someTicked;
+                    }}
+                    onChange={onToggleAll}
+                    aria-label={
+                      allTicked ? 'Clear selection' : `Select all ${bookings.length} bookings`
+                    }
+                  />
+                </th>
+              )}
               <th>Submission ID</th>
               <th>Partner</th>
               <th>Customer no.</th>
@@ -45,7 +75,21 @@ export function BookingTable({ bookings, onOpen, variant = 'rep' }: BookingTable
           </thead>
           <tbody>
             {bookings.map((b) => (
-              <tr key={b.submissionId} onClick={() => onOpen(b)}>
+              <tr
+                key={b.submissionId}
+                onClick={() => onOpen(b)}
+                className={selectable && selected!.has(b.submissionId) ? 'sk-row--on' : undefined}
+              >
+                {selectable && (
+                  <td className="sk-tick-col" onClick={(e) => e.stopPropagation()}>
+                    <input
+                      type="checkbox"
+                      checked={selected!.has(b.submissionId)}
+                      onChange={() => onToggle!(b.submissionId)}
+                      aria-label={`Select ${b.submissionId}`}
+                    />
+                  </td>
+                )}
                 <td className="sk-id">{b.submissionId}</td>
                 <td className="sk-strong">{b.partnerInfo.partnerName}</td>
                 <td className="sk-id">{orDash(b.partnerInfo.customerNumber)}</td>

@@ -10,6 +10,7 @@ import {
   updateBookingImages,
   updateBookingNotes,
   updateBookingStatus,
+  updateBookingStatuses,
 } from '../data/remoteBookings';
 
 /**
@@ -89,6 +90,15 @@ export function useBookings(role: Role, email = '') {
     [refresh],
   );
 
+  /** Move several bookings to the same status in one go. HQ only. */
+  const updateStatuses = useCallback(
+    async (ids: string[], status: BookingStatus) => {
+      await updateBookingStatuses(ids, status);
+      await refresh();
+    },
+    [refresh],
+  );
+
   /** Set the campaign images on a booking. Available to reps on their own. */
   const updateImages = useCallback(
     async (id: string, images: string[]) => {
@@ -123,6 +133,7 @@ export function useBookings(role: Role, email = '') {
     submit,
     updateImages,
     updateStatus,
+    updateStatuses,
     updateNotes,
     remove,
   };

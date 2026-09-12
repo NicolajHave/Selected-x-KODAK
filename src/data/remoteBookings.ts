@@ -93,6 +93,24 @@ export async function updateBookingStatus(
   if (error) throw new Error(error.message);
 }
 
+/**
+ * Set the same status on several bookings at once.
+ *
+ * One statement rather than a call per booking, so HQ cannot end up with half
+ * the selection moved and half not because the network dropped midway.
+ */
+export async function updateBookingStatuses(
+  submissionIds: string[],
+  status: BookingStatus,
+): Promise<void> {
+  if (submissionIds.length === 0) return;
+  const { error } = await requireSupabase()
+    .from(TABLE)
+    .update({ status, updated_at: new Date().toISOString() })
+    .in('submission_id', submissionIds);
+  if (error) throw new Error(error.message);
+}
+
 /** Bookings submitted by one sales rep, newest first. */
 export async function listBookingsForRep(email: string): Promise<BookingSubmission[]> {
   const { data, error } = await requireSupabase()
