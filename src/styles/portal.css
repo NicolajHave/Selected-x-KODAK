@@ -599,8 +599,36 @@
 }
 .sk-portal .sk-wizard-foot__right { display: flex; gap: 10px; flex-wrap: wrap; }
 
+/* ---------- Bulk actions ---------- */
+.sk-portal .sk-bulkbar {
+  display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+  margin-bottom: 14px; padding: 10px 16px;
+  background: var(--sk-ink); color: var(--bg-1); border-radius: var(--r-3);
+}
+.sk-portal .sk-bulkbar__count { font-size: 13px; white-space: nowrap; }
+.sk-portal .sk-bulkbar__count strong { font-family: var(--font-mono); font-size: 15px; }
+.sk-portal .sk-bulkbar__actions {
+  display: flex; align-items: center; gap: 8px; flex-wrap: wrap; margin-right: auto;
+}
+.sk-portal .sk-bulkbar__label {
+  font-size: 10px; font-weight: 700; letter-spacing: .12em; text-transform: uppercase;
+  opacity: .65;
+}
+.sk-portal .sk-bulkbar .sk-chip {
+  background: transparent; color: var(--bg-1); border-color: rgba(255, 255, 255, .35);
+}
+.sk-portal .sk-bulkbar .sk-chip:hover:not(:disabled) {
+  background: var(--bg-1); color: var(--sk-ink); border-color: var(--bg-1);
+}
+.sk-portal .sk-bulkbar .sk-chip:disabled { opacity: .45; cursor: default; }
+.sk-portal .sk-bulkbar .sk-btn--text { color: var(--bg-1); opacity: .75; }
+.sk-portal .sk-bulkbar .sk-btn--text:hover { opacity: 1; }
+
 /* ---------- Table ---------- */
 .sk-portal .sk-tablewrap { overflow-x: auto; }
+.sk-portal .sk-table .sk-tick-col { width: 34px; padding-right: 0; }
+.sk-portal .sk-table .sk-tick-col input { cursor: pointer; accent-color: var(--sk-ink); }
+.sk-portal .sk-table tbody tr.sk-row--on td { background: var(--bg-3); }
 .sk-portal .sk-table {
   width: 100%;
   border-collapse: collapse;
