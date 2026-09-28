@@ -11,6 +11,8 @@ import { ACTIVATION_BY_TYPE, MARKET_OTHER } from '../data/catalog';
 export type Errors = Record<string, string>;
 
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+/** 1 or more, no leading zero, nothing else. */
+const WHOLE_NUMBER_RE = /^[1-9]\d*$/;
 
 export function validatePartner(b: BookingSubmission): Errors {
   const e: Errors = {};
@@ -47,9 +49,13 @@ export function validateDetails(b: BookingSubmission): Errors {
     const def = ACTIVATION_BY_TYPE[type];
     const d = b.activationDetails[type] as unknown as Record<string, unknown> | undefined;
     if (def.needsQuantity) {
-      const qty = (d?.requestedQuantity ?? d?.quantity) as string | undefined;
-      if (!qty || !String(qty).trim()) {
+      const qty = String((d?.requestedQuantity ?? d?.quantity) ?? '').trim();
+      if (!qty) {
         e[`${type}.quantity`] = 'Quantity is required for this activation.';
+      } else if (!WHOLE_NUMBER_RE.test(qty)) {
+        // Free text here reaches production as-is: "1 + 2 racks" once had to be
+        // untangled by hand. Extras belong in the notes field.
+        e[`${type}.quantity`] = 'Enter a whole number, e.g. 1. Put anything extra in the notes.';
       }
     }
   }

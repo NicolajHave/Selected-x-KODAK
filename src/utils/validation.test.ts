@@ -1,6 +1,12 @@
 import { describe, expect, it } from 'vitest';
-import { validateForSubmit, validatePartner } from './validation';
-import { emptyBooking, emptyHeroPopup, emptyPartnerInfo, trimPartnerInfo } from './booking';
+import { validateDetails, validateForSubmit, validatePartner } from './validation';
+import {
+  emptyBooking,
+  emptyCampaignElement,
+  emptyHeroPopup,
+  emptyPartnerInfo,
+  trimPartnerInfo,
+} from './booking';
 import type { BookingSubmission } from '../types';
 
 function baseBooking(): BookingSubmission {
@@ -49,9 +55,37 @@ describe('validateForSubmit', () => {
     b.partnerInfo.partnerName = 'Boutique Nord';
     b.partnerInfo.market = 'DK';
     b.selectedActivations = ['hero_popup'];
-    b.activationDetails = { hero_popup: emptyHeroPopup() };
+    b.activationDetails = { hero_popup: { ...emptyHeroPopup(), requestedQuantity: '' } };
     const errors = validateForSubmit(b);
     expect(errors['hero_popup.quantity']).toBeDefined();
+  });
+
+  it('starts quantity at 1, so an untouched field is valid', () => {
+    // It used to start empty behind a greyed "1" placeholder, which read as
+    // filled in and silently blocked Next.
+    const b = baseBooking();
+    b.partnerInfo.partnerName = 'Boutique Nord';
+    b.partnerInfo.market = 'DK';
+    b.selectedActivations = ['hero_popup', 'campaign_element'];
+    b.activationDetails = { hero_popup: emptyHeroPopup(), campaign_element: emptyCampaignElement() };
+    expect(validateDetails(b)).toEqual({});
+  });
+
+  it.each(['0', '-1', '1.5', '01', 'abc', '1 + 2 racks', '2 walls'])(
+    'rejects %j as a quantity',
+    (qty) => {
+      const b = baseBooking();
+      b.selectedActivations = ['hero_popup'];
+      b.activationDetails = { hero_popup: { ...emptyHeroPopup(), requestedQuantity: qty } };
+      expect(validateDetails(b)['hero_popup.quantity']).toMatch(/whole number/);
+    },
+  );
+
+  it.each(['1', '2', '12', ' 3 '])('accepts %j as a quantity', (qty) => {
+    const b = baseBooking();
+    b.selectedActivations = ['campaign_element'];
+    b.activationDetails = { campaign_element: { ...emptyCampaignElement(), requestedQuantity: qty } };
+    expect(validateDetails(b)).toEqual({});
   });
 
   it('is clean for a fully-specified booking', () => {

@@ -46,15 +46,20 @@ export function trimPartnerInfo(p: PartnerInfo): PartnerInfo {
   return out;
 }
 
+/*
+ * Quantity starts at 1, the answer for nearly every booking. It used to start
+ * empty with a greyed "1" placeholder, which read as filled in: reps pressed
+ * Next, validation stopped them, and nothing on screen said why.
+ */
 export const emptyHeroPopup = (): HeroPopupDetails => ({
-  requestedQuantity: '',
+  requestedQuantity: '1',
   preferredDeliveryWindow: '',
   storePlacementNotes: '',
   notes: '',
 });
 
 export const emptyCampaignElement = (): CampaignElementDetails => ({
-  requestedQuantity: '',
+  requestedQuantity: '1',
   notes: '',
 });
 
@@ -82,10 +87,19 @@ export function emptyDetailFor(type: ActivationType): ActivationDetails[Activati
   }
 }
 
-/** Generate a new submission id, e.g. SUB-2027-00423. */
+/**
+ * Generate a new submission id, e.g. SUB-2027-482913.
+ *
+ * Six random digits from 100000–999999. The first ids were drawn from only
+ * 9,000 values (SUB-2027-001000 to -009999), where two reps landing on the same
+ * id became likely within a couple of hundred bookings. The new range cannot
+ * overlap the old one, so a new booking never clashes with an existing one, and
+ * a clash between two new ones is caught and retried on submit.
+ */
 export function generateSubmissionId(): string {
-  const n = Math.floor(Math.random() * 9000) + 1000;
-  return `SUB-2027-00${n}`;
+  const [r] = crypto.getRandomValues(new Uint32Array(1));
+  const n = 100000 + (r % 900000);
+  return `SUB-2027-${n}`;
 }
 
 /**

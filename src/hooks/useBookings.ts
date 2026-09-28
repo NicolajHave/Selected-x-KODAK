@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useState } from 'react';
 import type { BookingStatus, BookingSubmission, Role } from '../types';
 import { bookingRepository } from '../data/repository';
-import { trimPartnerInfo } from '../utils/booking';
+import { generateSubmissionId, trimPartnerInfo } from '../utils/booking';
+import { sendWithFreshIdOnClash } from '../utils/submitRetry';
 import {
   deleteBooking,
   listBookings,
@@ -66,14 +67,19 @@ export function useBookings(role: Role, email = '') {
   const submit = useCallback(
     async (booking: BookingSubmission): Promise<BookingSubmission> => {
       const now = new Date().toISOString();
-      const toSend: BookingSubmission = {
+      const draft: BookingSubmission = {
         ...booking,
         partnerInfo: trimPartnerInfo(booking.partnerInfo),
         status: 'submitted',
         submittedAt: booking.submittedAt || now,
         updatedAt: now,
       };
-      await submitBooking(toSend);
+      // Another booking holding this id is rare but possible; take a fresh one.
+      const toSend = await sendWithFreshIdOnClash(draft, submitBooking, generateSubmissionId);
+      // A draft saved under the old id would otherwise linger as a phantom draft.
+      if (toSend.submissionId !== booking.submissionId) {
+        bookingRepository.remove(booking.submissionId);
+      }
       // Only mirror locally once HQ has it, so the rep's list reflects reality.
       bookingRepository.upsert(toSend);
       setBookings(bookingRepository.list());

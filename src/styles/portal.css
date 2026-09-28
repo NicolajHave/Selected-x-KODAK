@@ -597,7 +597,8 @@
   border-top: 1px solid var(--rule-1);
   flex-wrap: wrap;
 }
-.sk-portal .sk-wizard-foot__right { display: flex; gap: 10px; flex-wrap: wrap; }
+.sk-portal .sk-wizard-foot__right { display: flex; gap: 10px; flex-wrap: wrap; align-items: center; }
+.sk-portal .sk-wizard-foot__hint { font-size: 12px; font-weight: 500; color: var(--sk-kodak-red); margin-right: 6px; }
 
 /* ---------- Bulk actions ---------- */
 .sk-portal .sk-bulkbar {
