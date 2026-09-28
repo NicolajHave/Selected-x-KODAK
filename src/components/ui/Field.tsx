@@ -65,6 +65,7 @@ export function TextInput({
       type={type}
       inputMode={inputMode}
       aria-label={ariaLabel}
+      aria-invalid={invalid || undefined}
       className={`sk-input${invalid ? ' sk-input--invalid' : ''}`}
       value={value}
       placeholder={placeholder}

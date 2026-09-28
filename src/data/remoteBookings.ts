@@ -13,6 +13,7 @@ import type {
   PartnerInfo,
 } from '../types';
 import { requireSupabase } from './supabaseClient';
+import { SubmissionIdTakenError, isSameBooking, type StoredIdentity } from '../utils/submitRetry';
 
 const TABLE = 'kodak_bookings';
 
@@ -62,14 +63,36 @@ function toRow(b: BookingSubmission): BookingRow {
   };
 }
 
-/** Send a booking to HQ. Callable without signing in (INSERT-only). */
+/**
+ * Send a booking to HQ. Callable without signing in.
+ *
+ * A duplicate submission id has two very different causes. It can be this same
+ * booking arriving twice — a double click, or a retry after the first attempt
+ * landed — which is success. Or it can be another rep's booking that happens to
+ * hold the id, and then this one has NOT been saved. The old code treated both
+ * as success, so a clash would have shown the rep a confirmation for a booking
+ * HQ never received. Now the stored row is checked, and a clash is reported so
+ * the caller can retry under a new id.
+ */
 export async function submitBooking(b: BookingSubmission): Promise<void> {
-  const { error } = await requireSupabase().from(TABLE).insert(toRow(b));
-  if (error) {
-    // A duplicate submission id means it already reached HQ — not a failure.
-    if (error.code === '23505') return;
-    throw new Error(error.message);
+  const db = requireSupabase();
+  const { error } = await db.from(TABLE).insert(toRow(b));
+  if (!error) return;
+  if (error.code !== '23505') throw new Error(error.message);
+
+  const { data: existing, error: readError } = await db
+    .from(TABLE)
+    .select('created_at, partner_info')
+    .eq('submission_id', b.submissionId)
+    .maybeSingle();
+  // If we cannot tell whose row it is, do not claim success.
+  if (readError || !existing) {
+    throw new Error('Could not confirm the booking reached HQ. Please try again.');
   }
+
+  if (isSameBooking(existing as StoredIdentity, b)) return;
+
+  throw new SubmissionIdTakenError(b.submissionId);
 }
 
 /** All bookings, newest first. Requires a signed-in HQ admin. */

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import type {
   ActivationType,
   BookingSubmission,
@@ -63,6 +63,32 @@ export function NewBooking({
   const [booking, setBooking] = useState<BookingSubmission>(initial);
   const [step, setStep] = useState(0);
   const [errors, setErrors] = useState<Errors>({});
+  const rootRef = useRef<HTMLDivElement>(null);
+
+  /* A new step starts at the top. Without this the page kept the previous
+     step's scroll position, so after the tall image grid a rep landed at the
+     bottom of the next step, below everything they had to fill in. */
+  useEffect(() => {
+    window.scrollTo({ top: 0 });
+  }, [step]);
+
+  /* When Next is refused, take the rep to what needs fixing. The footer sits
+     below the image grid, so the message used to appear thousands of pixels
+     above the button and the click looked like it did nothing. Runs after the
+     step effect, so a submit that jumps back a step still lands on the field. */
+  useEffect(() => {
+    if (!hasErrors(errors)) return;
+    const frame = requestAnimationFrame(() => {
+      const root = rootRef.current;
+      const target =
+        root?.querySelector<HTMLElement>('[aria-invalid="true"]') ??
+        root?.querySelector<HTMLElement>('.sk-error');
+      if (!target) return;
+      target.scrollIntoView({ block: 'center' });
+      if (target.matches('input, select, textarea')) target.focus({ preventScroll: true });
+    });
+    return () => cancelAnimationFrame(frame);
+  }, [errors]);
 
   /* ---------- mutators ---------- */
   const setPartner = (field: keyof PartnerInfo, value: string) =>
@@ -165,7 +191,7 @@ export function NewBooking({
   );
 
   return (
-    <div className="sk-container" style={{ maxWidth: 1100 }}>
+    <div className="sk-container" style={{ maxWidth: 1100 }} ref={rootRef}>
       <div className="sk-spread" style={{ alignItems: 'flex-end', marginBottom: 8 }}>
         <Eyebrow size="lg">New partner booking</Eyebrow>
         <Button variant="text" size="sm" onClick={onCancel}>
@@ -352,6 +378,13 @@ export function NewBooking({
           {step === 0 ? 'Cancel' : '← Back'}
         </Button>
         <div className="sk-wizard-foot__right">
+          {hasErrors(errors) && (
+            <span className="sk-wizard-foot__hint">
+              {Object.keys(errors).length === 1
+                ? '1 field needs attention above'
+                : `${Object.keys(errors).length} fields need attention above`}
+            </span>
+          )}
           <Button variant="ghost" onClick={() => onSaveDraft(booking)} disabled={submitting}>
             Save as draft
           </Button>

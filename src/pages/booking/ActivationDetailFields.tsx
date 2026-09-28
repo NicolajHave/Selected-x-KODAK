@@ -71,7 +71,6 @@ function HeroFields({
           <TextInput
             value={d.requestedQuantity || ''}
             onChange={(v) => set('requestedQuantity', v)}
-            placeholder="1"
             inputMode="numeric"
             invalid={!!errors['hero_popup.quantity']}
           />
@@ -116,7 +115,6 @@ function CampaignFields({
           <TextInput
             value={d.requestedQuantity || ''}
             onChange={(v) => set('requestedQuantity', v)}
-            placeholder="1"
             inputMode="numeric"
             invalid={!!errors['campaign_element.quantity']}
           />
