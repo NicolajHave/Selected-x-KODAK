@@ -9,7 +9,7 @@
 import { supabase } from './supabaseClient';
 
 /** Used when the setting cannot be read; keep in step with the seeded value. */
-const FALLBACK_DEADLINE = '2026-10-01T23:59:59+02:00';
+const FALLBACK_DEADLINE = '2026-10-14T12:00:00+02:00';
 
 export async function fetchImageDeadline(): Promise<Date> {
   const fallback = new Date(FALLBACK_DEADLINE);
@@ -29,10 +29,26 @@ export async function fetchImageDeadline(): Promise<Date> {
 export const isPastDeadline = (deadline: Date | null): boolean =>
   deadline !== null && Date.now() > deadline.getTime();
 
+/**
+ * "Wednesday, 14 October 2026 at 12:00 Danish time".
+ *
+ * The time matters: a midday deadline shown as a bare date reads as end of day,
+ * and a rep would lose the afternoon. Always rendered in Danish time, since HQ
+ * sets the deadline and reps sit in several time zones.
+ */
 export function formatDeadline(deadline: Date): string {
-  return deadline.toLocaleDateString('en-GB', {
+  const zone = 'Europe/Copenhagen';
+  const date = deadline.toLocaleDateString('en-GB', {
+    weekday: 'long',
     day: 'numeric',
     month: 'long',
     year: 'numeric',
+    timeZone: zone,
   });
+  const time = deadline.toLocaleTimeString('en-GB', {
+    hour: '2-digit',
+    minute: '2-digit',
+    timeZone: zone,
+  });
+  return `${date} at ${time} Danish time`;
 }
