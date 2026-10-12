@@ -6,7 +6,7 @@ import type {
   SmallActivationPackageDetails,
   SpinWinDetails,
 } from '../../types';
-import { ACTIVATION_BY_TYPE } from '../../data/catalog';
+import { ACTIVATION_BY_TYPE, SMALL_PACKAGE_TEXT } from '../../data/catalog';
 import { FormSection } from '../../components/FormSection';
 import { Field, Textarea, TextInput } from '../../components/ui/Field';
 import type { Errors } from '../../utils/validation';
@@ -180,7 +180,7 @@ function SmallPackageFields({
       <div>
         <Field label="Includes">
           <div className="sk-defval" style={{ fontSize: 14, paddingTop: 4 }}>
-            50 totebags · 10 disposable cameras
+            {SMALL_PACKAGE_TEXT.label}
           </div>
         </Field>
       </div>

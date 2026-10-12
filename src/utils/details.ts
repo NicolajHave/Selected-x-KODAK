@@ -1,6 +1,6 @@
 /** Turn an activation's detail block into label/value pairs for display. */
 import type { ActivationType, BookingSubmission } from '../types';
-import { ACTIVATION_BY_TYPE } from '../data/catalog';
+import { ACTIVATION_BY_TYPE, SMALL_PACKAGE_TEXT } from '../data/catalog';
 
 export interface DetailRow {
   label: string;
@@ -49,7 +49,7 @@ export function detailRows(b: BookingSubmission, t: ActivationType): DetailRow[]
       const d = det.small_activation_package;
       if (!d) return [];
       return clean([
-        { label: 'Includes', value: '50 totebags · 10 disposable cameras' },
+        { label: 'Includes', value: SMALL_PACKAGE_TEXT.label },
         { label: 'Cost owner', value: ACTIVATION_BY_TYPE.small_activation_package.costOwner },
         { label: 'Notes', value: d.notes },
       ]);

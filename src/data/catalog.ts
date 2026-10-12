@@ -34,6 +34,25 @@ export interface ActivationDef {
   video?: string;
 }
 
+
+/**
+ * What one Small Activation Package contains. The single source for every place
+ * that shows it — wizard, booking drawer, Excel export — and the database stores
+ * only notes per booking, so changing these numbers updates every booking.
+ *
+ * Reduced from 50 totebags + 10 cameras in October 2026, for cost and demand.
+ */
+export const SMALL_PACKAGE_CONTENTS = { totebags: 25, cameras: 5 } as const;
+
+export const SMALL_PACKAGE_TEXT = {
+  /** "25 totebags · 5 disposable cameras" — for on-screen labels. */
+  label: `${SMALL_PACKAGE_CONTENTS.totebags} totebags · ${SMALL_PACKAGE_CONTENTS.cameras} disposable cameras`,
+  /** "25 totebags and 5 disposable cameras" — for running text. */
+  prose: `${SMALL_PACKAGE_CONTENTS.totebags} totebags and ${SMALL_PACKAGE_CONTENTS.cameras} disposable cameras`,
+  /** "25 totebags; 5 disposable cameras" — for the Excel export. */
+  export: `${SMALL_PACKAGE_CONTENTS.totebags} totebags; ${SMALL_PACKAGE_CONTENTS.cameras} disposable cameras`,
+};
+
 export const ACTIVATIONS: ActivationDef[] = [
   {
     type: 'hero_popup',
@@ -82,8 +101,7 @@ export const ACTIVATIONS: ActivationDef[] = [
     type: 'small_activation_package',
     code: '04',
     name: 'Small Activation Package',
-    description:
-      'A compact kit containing 50 totebags and 10 disposable cameras to activate smaller doors.',
+    description: `A compact kit containing ${SMALL_PACKAGE_TEXT.prose} to activate smaller doors.`,
     recommendedFor: 'field_account',
     recommendedLabel: 'Southern markets',
     costOwner: 'HQ',

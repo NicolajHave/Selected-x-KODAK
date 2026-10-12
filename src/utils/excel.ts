@@ -6,7 +6,12 @@
  */
 import * as XLSX from 'xlsx';
 import type { BookingSubmission } from '../types';
-import { ACTIVATION_BY_TYPE, marketDisplay, STATUS_BY_KEY } from '../data/catalog';
+import {
+  ACTIVATION_BY_TYPE,
+  marketDisplay,
+  SMALL_PACKAGE_TEXT,
+  STATUS_BY_KEY,
+} from '../data/catalog';
 import { formatDate, todayStamp, yesNo } from './format';
 
 type Row = Record<string, string>;
@@ -52,7 +57,7 @@ export function bookingToRow(b: BookingSubmission): Row {
 
     'Small activation package selected': sel('small_activation_package'),
     'Small activation package contents': has('small_activation_package')
-      ? '50 totebags; 10 disposable cameras'
+      ? SMALL_PACKAGE_TEXT.export
       : '',
     'Small activation package cost owner': owner('small_activation_package'),
 
