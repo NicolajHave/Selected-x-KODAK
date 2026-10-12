@@ -6,7 +6,8 @@ import { orDash } from '../utils/format';
 
 interface ConfirmationScreenProps {
   booking: BookingSubmission;
-  onNew: () => void;
+  /** Omitted once booking is closed, which hides "Create another booking". */
+  onNew?: () => void;
   onHome: () => void;
   onView: () => void;
 }
@@ -42,9 +43,11 @@ export function ConfirmationScreen({ booking, onNew, onHome, onView }: Confirmat
       </div>
 
       <div className="sk-row">
-        <Button variant="primary" onClick={onNew}>
-          + Create another booking
-        </Button>
+        {onNew && (
+          <Button variant="primary" onClick={onNew}>
+            + Create another booking
+          </Button>
+        )}
         <Button variant="ghost" onClick={onView}>
           View submitted booking
         </Button>

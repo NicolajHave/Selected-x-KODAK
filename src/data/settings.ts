@@ -52,3 +52,29 @@ export function formatDeadline(deadline: Date): string {
   });
   return `${date} at ${time} Danish time`;
 }
+
+/** Used when the setting cannot be read; keep in step with the seeded value. */
+const FALLBACK_BOOKINGS_OPEN = false;
+
+/**
+ * Whether new bookings can be submitted. HQ closed Spring '27 booking on
+ * 12 October 2026. The database enforces it with a trigger on insert; the
+ * portal reads it only to hide "New booking" instead of letting a rep fill in
+ * the whole wizard and be refused at the end.
+ */
+export async function fetchBookingsOpen(): Promise<boolean> {
+  if (!supabase) return FALLBACK_BOOKINGS_OPEN;
+  const { data, error } = await supabase
+    .from('kodak_settings')
+    .select('value')
+    .eq('key', 'bookings_open')
+    .maybeSingle();
+  if (error) return FALLBACK_BOOKINGS_OPEN;
+  return parseBookingsOpen(data?.value);
+}
+
+/** Only an explicit "true" opens booking; anything else, or nothing, is closed. */
+export function parseBookingsOpen(value: unknown): boolean {
+  if (value === null || value === undefined || value === '') return FALLBACK_BOOKINGS_OPEN;
+  return String(value).trim().toLowerCase() === 'true';
+}

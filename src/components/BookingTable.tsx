@@ -17,6 +17,8 @@ interface BookingTableProps {
   selected?: Set<string>;
   onToggle?: (submissionId: string) => void;
   onToggleAll?: () => void;
+  /** Shown when there are no bookings. */
+  emptyText?: string;
 }
 
 /** Dense overview table — top + bottom rule only, mono right-aligned figures. */
@@ -27,9 +29,10 @@ export function BookingTable({
   selected,
   onToggle,
   onToggleAll,
+  emptyText = 'No submissions yet. Start one when a partner commits.',
 }: BookingTableProps) {
   if (bookings.length === 0) {
-    return <div className="sk-empty">No submissions yet. Start one when a partner commits.</div>;
+    return <div className="sk-empty">{emptyText}</div>;
   }
 
   if (variant === 'admin') {

@@ -9,10 +9,18 @@ interface DashboardProps {
   personaName: string;
   onNew: () => void;
   onOpen: (b: BookingSubmission) => void;
+  /** When false, the create button is replaced by a closed notice. */
+  bookingsOpen?: boolean;
 }
 
 /** Sales rep dashboard — KPI strip + recent bookings. */
-export function Dashboard({ bookings, personaName, onNew, onOpen }: DashboardProps) {
+export function Dashboard({
+  bookings,
+  personaName,
+  onNew,
+  onOpen,
+  bookingsOpen = true,
+}: DashboardProps) {
   // Reps see their own submissions first; fall back to all if none are theirs.
   const mine = bookings.filter((b) => b.createdBy === personaName);
   const scoped = mine.length > 0 ? mine : bookings;
@@ -39,10 +47,20 @@ export function Dashboard({ bookings, personaName, onNew, onOpen }: DashboardPro
             {awaiting === 1 ? '' : 's'} awaiting HQ review.
           </p>
         </div>
-        <Button variant="primary" onClick={onNew}>
-          + Create new booking
-        </Button>
+        {bookingsOpen && (
+          <Button variant="primary" onClick={onNew}>
+            + Create new booking
+          </Button>
+        )}
       </div>
+
+      {!bookingsOpen && (
+        <div className="sk-lockbar" role="status" style={{ marginBottom: 24 }}>
+          <strong>Booking for Spring '27 is closed.</strong> New bookings can no longer be added.
+          You can still open your submitted bookings and choose their campaign images. For any
+          change, contact HQ.
+        </div>
+      )}
 
       <div className="sk-kpis" style={{ gridTemplateColumns: 'repeat(4, 1fr)' }}>
         <DashboardCard label="Submitted" value={submitted} hint="Sent to HQ" />
@@ -54,7 +72,12 @@ export function Dashboard({ bookings, personaName, onNew, onOpen }: DashboardPro
       <div className="sk-spread" style={{ marginBottom: 16 }}>
         <Eyebrow size="lg">Recent bookings</Eyebrow>
       </div>
-      <BookingTable bookings={scoped} onOpen={onOpen} variant="rep" />
+      <BookingTable
+        bookings={scoped}
+        onOpen={onOpen}
+        variant="rep"
+        emptyText={bookingsOpen ? undefined : "You have no bookings for Spring '27."}
+      />
     </div>
   );
 }
