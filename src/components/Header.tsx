@@ -20,6 +20,8 @@ interface HeaderProps {
   personaInitials: string;
   /** Provided only when an HQ session is active. */
   onSignOut?: () => void;
+  /** When false, "New booking" is left out of the navigation. */
+  bookingsOpen?: boolean;
 }
 
 export function Header({
@@ -30,13 +32,14 @@ export function Header({
   personaName,
   personaInitials,
   onSignOut,
+  bookingsOpen = true,
 }: HeaderProps) {
   return (
     <header className="sk-header">
       <div className="sk-header__left">
         <Lockup size="md" />
         <nav className="sk-nav" aria-label="Main">
-          {NAV_ITEMS.map((item) => (
+          {NAV_ITEMS.filter((item) => bookingsOpen || item.key !== 'new').map((item) => (
             <button
               key={item.key}
               type="button"

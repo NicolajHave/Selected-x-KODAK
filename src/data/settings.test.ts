@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { formatDeadline, isPastDeadline } from './settings';
+import { formatDeadline, isPastDeadline, parseBookingsOpen } from './settings';
 
 describe('formatDeadline', () => {
   it('shows the weekday, date and time in Danish time', () => {
@@ -23,5 +23,18 @@ describe('isPastDeadline', () => {
   it('is true once the deadline has passed', () => {
     expect(isPastDeadline(new Date(Date.now() - 1000))).toBe(true);
     expect(isPastDeadline(new Date(Date.now() + 60_000))).toBe(false);
+  });
+});
+
+describe('parseBookingsOpen', () => {
+  it('is open only for an explicit true', () => {
+    expect(parseBookingsOpen('true')).toBe(true);
+    expect(parseBookingsOpen(' TRUE ')).toBe(true);
+  });
+
+  it('is closed for false, junk or a missing value', () => {
+    for (const v of ['false', 'FALSE ', 'no', '', null, undefined]) {
+      expect(parseBookingsOpen(v)).toBe(false);
+    }
   });
 });

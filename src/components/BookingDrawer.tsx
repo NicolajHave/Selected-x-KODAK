@@ -23,6 +23,8 @@ interface BookingDrawerProps {
   onImagesChange: (images: string[]) => void;
   imageDeadline: Date | null;
   imageError: string;
+  /** When false, drafts can no longer be continued or submitted. */
+  bookingsOpen?: boolean;
 }
 
 /** Slide-over drawer with full booking details + admin status controls. */
@@ -37,6 +39,7 @@ export function BookingDrawer({
   onImagesChange,
   imageDeadline,
   imageError,
+  bookingsOpen = true,
 }: BookingDrawerProps) {
   useEffect(() => {
     if (!booking) return;
@@ -250,8 +253,15 @@ export function BookingDrawer({
           </>
         )}
 
+        {role === 'rep' && b.status === 'draft' && !bookingsOpen && (
+          <div className="sk-lockbar" role="status" style={{ marginTop: 20 }}>
+            <strong>Booking is closed.</strong> This draft was never sent to HQ and can no longer be
+            submitted. Contact HQ if this partner still needs an activation.
+          </div>
+        )}
+
         <div className="sk-spread" style={{ justifyContent: 'flex-end', marginTop: 20 }}>
-          {role === 'rep' && b.status === 'draft' && (
+          {role === 'rep' && b.status === 'draft' && bookingsOpen && (
             <Button variant="ghost" onClick={() => onEdit(b)}>
               Continue editing
             </Button>

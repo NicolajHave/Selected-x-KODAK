@@ -12,7 +12,7 @@ import { ConfirmationScreen } from './components/ConfirmationScreen';
 import { AdminGate } from './components/AdminGate';
 import { useBookings } from './hooks/useBookings';
 import { emptyBooking } from './utils/booking';
-import { fetchImageDeadline } from './data/settings';
+import { fetchBookingsOpen, fetchImageDeadline } from './data/settings';
 import {
   forgetAdmin,
   isAdminEmail,
@@ -51,10 +51,19 @@ export default function App() {
   const [submitError, setSubmitError] = useState('');
   const [imageDeadline, setImageDeadline] = useState<Date | null>(null);
   const [imageError, setImageError] = useState('');
+  // Null until read. Anything but true counts as closed, so "New booking" never
+  // flashes up for a moment before disappearing.
+  const [bookingsOpenFlag, setBookingsOpenFlag] = useState<boolean | null>(null);
+  const bookingsOpen = bookingsOpenFlag === true;
 
   // The database enforces the image deadline; this is only so reps see it.
   useEffect(() => {
     void fetchImageDeadline().then(setImageDeadline);
+  }, []);
+
+  // The database refuses new bookings once closed; this only adapts the UI.
+  useEffect(() => {
+    void fetchBookingsOpen().then(setBookingsOpenFlag);
   }, []);
 
   // Remember an approved HQ email so a page refresh doesn't ask again.
@@ -82,6 +91,7 @@ export default function App() {
 
   /* ---------- navigation ---------- */
   const startNew = () => {
+    if (!bookingsOpen) return;
     setEditing(emptyBooking(persona.name, persona.email));
     setConfirmation(null);
     setSubmitError('');
@@ -177,6 +187,7 @@ export default function App() {
     );
   };
   const handleEditFromDrawer = (b: BookingSubmission) => {
+    if (!bookingsOpen) return;
     setDrawerId(null);
     setEditing(b);
     setNav('new');
@@ -217,7 +228,7 @@ export default function App() {
     content = (
       <ConfirmationScreen
         booking={confirmation}
-        onNew={startNew}
+        onNew={bookingsOpen ? startNew : undefined}
         onHome={() => {
           setConfirmation(null);
           setNav(role === 'admin' ? 'admin' : 'dashboard');
@@ -229,7 +240,7 @@ export default function App() {
         }}
       />
     );
-  } else if (nav === 'new' && editing) {
+  } else if (nav === 'new' && editing && bookingsOpen) {
     content = (
       <NewBooking
         initial={editing}
@@ -265,6 +276,7 @@ export default function App() {
         personaName={persona.name}
         onNew={startNew}
         onOpen={(b) => setDrawerId(b.submissionId)}
+        bookingsOpen={bookingsOpen}
       />
     );
   }
@@ -279,6 +291,7 @@ export default function App() {
       personaName={persona.name}
       personaInitials={persona.initials}
       onSignOut={adminAuthed ? handleSignOut : undefined}
+      bookingsOpen={bookingsOpen}
     >
       {content}
       <BookingDrawer
@@ -290,6 +303,7 @@ export default function App() {
         onImagesChange={handleImagesChange}
         imageDeadline={imageDeadline}
         imageError={imageError}
+        bookingsOpen={bookingsOpen}
         onEdit={handleEditFromDrawer}
         onDelete={handleDeleteFromDrawer}
       />

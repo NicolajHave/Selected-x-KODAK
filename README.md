@@ -156,6 +156,24 @@ insert into public.kodak_admins (email) values ('someone@bestseller.com');
 delete from public.kodak_admins where email = 'someone@bestseller.com';
 ```
 
+**Opening and closing booking** — Spring '27 booking closed on 12 October 2026.
+A trigger on `kodak_bookings` refuses inserts from the portal (the `anon` and
+`authenticated` roles) while the setting is `false`; HQ working directly in the
+database can still add a booking by hand. The portal reads the same setting to
+hide "New booking". To reopen:
+
+```sql
+update public.kodak_settings set value = 'true', updated_at = now() where key = 'bookings_open';
+```
+
+**Image selection deadline** — the same table holds `image_selection_deadline`;
+a trigger rejects image changes after it.
+
+```sql
+update public.kodak_settings set value = '2026-10-14T12:00:00+02:00', updated_at = now()
+where key = 'image_selection_deadline';
+```
+
 ---
 
 ## Excel export

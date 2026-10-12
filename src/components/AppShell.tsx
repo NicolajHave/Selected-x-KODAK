@@ -13,6 +13,8 @@ interface AppShellProps {
   personaInitials: string;
   /** Provided only when an HQ session is active. */
   onSignOut?: () => void;
+  /** When false, "New booking" is left out of the navigation. */
+  bookingsOpen?: boolean;
   children: ReactNode;
 }
 
@@ -30,6 +32,7 @@ export function AppShell({
   personaName,
   personaInitials,
   onSignOut,
+  bookingsOpen,
   children,
 }: AppShellProps) {
   return (
@@ -38,6 +41,7 @@ export function AppShell({
         <Header
           nav={nav}
           onNavigate={onNavigate}
+          bookingsOpen={bookingsOpen}
           role={role}
           onRoleChange={onRoleChange}
           personaName={personaName}
