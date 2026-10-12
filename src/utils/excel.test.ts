@@ -45,3 +45,19 @@ describe('bookingToRow', () => {
     expect(row['Delivery window']).toBe('Wk 14–15');
   });
 });
+
+describe('Small Activation Package contents', () => {
+  it('exports the current contents: 25 totebags and 5 cameras', () => {
+    const row = bookingToRow({
+      ...emptyBooking('Ines Najib', 'ines.najib@bestseller.com'),
+      partnerInfo: emptyPartnerInfo({ partnerName: 'Le Casier', market: 'FR' }),
+      selectedActivations: ['small_activation_package'],
+      activationDetails: { small_activation_package: { notes: '' } },
+    });
+    expect(row['Small activation package contents']).toBe('25 totebags; 5 disposable cameras');
+  });
+
+  it('leaves the contents blank when no package is booked', () => {
+    expect(bookingToRow(heroCampaignBooking())['Small activation package contents']).toBe('');
+  });
+});

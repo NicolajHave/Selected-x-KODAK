@@ -88,7 +88,7 @@ export interface SpinWinDetails {
   notes: string;
 }
 
-/** Fixed bundle (50 totebags + 10 disposable cameras); only the notes vary. */
+/** Fixed bundle (contents in SMALL_PACKAGE_CONTENTS); only the notes vary. */
 export interface SmallActivationPackageDetails {
   notes: string;
 }
