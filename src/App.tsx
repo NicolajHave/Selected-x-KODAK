@@ -1,4 +1,4 @@
-import { useEffect, useMemo, useState } from 'react';
+import { Suspense, lazy, useEffect, useMemo, useState } from 'react';
 import type { BookingStatus, BookingSubmission, Role } from './types';
 import { AppShell } from './components/AppShell';
 import type { NavKey } from './components/Header';
@@ -20,6 +20,9 @@ import {
   rememberAdmin,
   rememberedAdmin,
 } from './utils/auth';
+
+/* HQ-only and heavy (PDF engine + fonts): loaded when first opened, so reps never download it. */
+const PrintTools = lazy(() => import('./pages/PrintTools').then((m) => ({ default: m.PrintTools })));
 
 export default function App() {
   const [entered, setEntered] = useState(false);
@@ -269,6 +272,12 @@ export default function App() {
     );
   } else if (nav === 'export') {
     content = <ExportView bookings={bookings} />;
+  } else if (nav === 'print' && role === 'admin') {
+    content = (
+      <Suspense fallback={<div className="sk-empty">Loading print tools…</div>}>
+        <PrintTools bookings={bookings} by={email || persona.email} />
+      </Suspense>
+    );
   } else {
     content = (
       <Dashboard
