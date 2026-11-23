@@ -176,6 +176,41 @@ where key = 'image_selection_deadline';
 
 ---
 
+## Print tools (HQ)
+
+**Print tools** in the HQ navigation turns bookings into print-ready artwork.
+Designs save automatically to `kodak_print_designs` (one row per design) and are
+shared with everyone in HQ; if the database can't be reached they are kept in
+the browser until it can.
+
+**Hero wall photos** — one wall per hero-wall booking, plus custom walls (e.g.
+Retail stores). Every wall starts from the **template**, which holds the panel
+sizes and photo slots; the store's chosen images fill the slots in order. Drag
+photos to move them, the corner handle to resize, and crop with zoom and the
+two crop sliders.
+
+- *Print PDF*: one page per panel at 1:1, TrimBox = panel size, bleed and crop
+  marks; photos are embedded without recompression and clipped to their frames.
+  Frames touching a panel edge run into the bleed.
+- *Proof PDF*: A3, one page per wall, for sign-off. Empty frames are outlined in red.
+- The portal's campaign images are 1600 px copies — far too small for a wall.
+  Load the full-resolution originals with **Load originals…** before exporting;
+  they are matched by file name (extension ignored), stay on that computer, and
+  the resolution table shows the effective ppi of every frame (≥150 good,
+  100–150 acceptable, below 100 too low).
+- The template's panel sizes (3 × 1000 × 2000 mm) are placeholders until
+  BuskMogensen confirms the real print sizes.
+
+**Spin & Win stickers** — segments, diameters, bleed, text and colours per
+segment, optional artwork. Exports either one round sticker (hub cut out) or one
+wedge per segment laid out on sheets. The cut line is stroked in a spot colour
+named `CutContour`, which sticker plotters cut along.
+
+Both PDFs are RGB with Inter embedded; the printer converts to CMYK.
+The PDF engine (`pdf-lib`) is loaded only when HQ opens Print tools.
+
+---
+
 ## Excel export
 
 `src/utils/excel.ts` builds one worksheet — **one row per booking** — with the full

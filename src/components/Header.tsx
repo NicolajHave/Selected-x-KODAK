@@ -2,13 +2,14 @@ import type { Role } from '../types';
 import { Lockup } from './ui/Lockup';
 import { RoleSwitcher } from './RoleSwitcher';
 
-export type NavKey = 'dashboard' | 'new' | 'admin' | 'export';
+export type NavKey = 'dashboard' | 'new' | 'admin' | 'export' | 'print';
 
 export const NAV_ITEMS: { key: NavKey; label: string }[] = [
   { key: 'dashboard', label: 'Dashboard' },
   { key: 'new', label: 'New booking' },
   { key: 'admin', label: 'Admin overview' },
   { key: 'export', label: 'Export' },
+  { key: 'print', label: 'Print tools' },
 ];
 
 interface HeaderProps {
@@ -39,7 +40,9 @@ export function Header({
       <div className="sk-header__left">
         <Lockup size="md" />
         <nav className="sk-nav" aria-label="Main">
-          {NAV_ITEMS.filter((item) => bookingsOpen || item.key !== 'new').map((item) => (
+          {NAV_ITEMS.filter(
+            (item) => (bookingsOpen || item.key !== 'new') && (role === 'admin' || item.key !== 'print'),
+          ).map((item) => (
             <button
               key={item.key}
               type="button"
