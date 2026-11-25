@@ -198,11 +198,14 @@ two crop sliders.
   they are matched by file name (extension ignored), stay on that computer, and
   the resolution table shows the effective ppi of every frame (≥150 good,
   100–150 acceptable, below 100 too low).
-- The template's panel sizes (3 × 1000 × 2000 mm) are placeholders until
-  BuskMogensen confirms the real print sizes.
+- The template starts as one photo wall of 630 × 1500 mm (width × height) with
+  5 mm bleed; confirm the bleed with the printer.
 
-**Spin & Win stickers** — segments, diameters, bleed, text and colours per
-segment, optional artwork. Exports either one round sticker (hub cut out) or one
+**Spin & Win stickers** — defaults follow Nine United's drawing of the tabletop
+wheel (21.10.2026): Ø198 mm UV-printed disc, ten 36° segments in Kodak Red
+(Pantone 485C) and Cloud Dancer, Ø60 mm logo disc, and a 12 × 8.7 mm knob near
+the rim that gets a hole cut in its sticker. Segments, diameters, bleed, inset,
+text, colours and artwork can all be changed per segment. Exports either one round sticker (hub cut out) or one
 wedge per segment laid out on sheets. The cut line is stroked in a spot colour
 named `CutContour`, which sticker plotters cut along.
 

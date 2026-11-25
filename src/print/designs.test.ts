@@ -1,11 +1,13 @@
 import { describe, expect, it } from 'vitest';
 import {
+  NINE_UNITED_WHEEL,
   defaultWallTemplate,
   defaultWheel,
   distributeImages,
   frameWithBleed,
   normalizeWheel,
   resizeSegments,
+  newPanel,
   wallFromTemplate,
 } from './designs';
 
@@ -16,6 +18,16 @@ describe('wheel designs', () => {
     expect(six).toHaveLength(6);
     expect(six[4].label).toBe(two[0].label);
     expect(six[5].background).toBe(two[1].background);
+  });
+
+  it("starts from Nine United's drawing of the tabletop wheel", () => {
+    const d = defaultWheel();
+    expect(d.segments).toBe(10);
+    expect(d.outerMm).toBe(198);
+    expect(d.hubMm).toBe(60);
+    expect(d.startDeg).toBe(18);
+    expect(d.knob).toEqual(NINE_UNITED_WHEEL.knob);
+    expect(d.items).toHaveLength(10);
   });
 
   it('normalizes an old or partial saved design', () => {
@@ -31,7 +43,7 @@ describe('wall designs', () => {
   const images = Array.from({ length: 13 }, (_, i) => `img-${i + 1}.jpg`);
 
   it('distributes images over the panels that hold images, in order', () => {
-    const t = defaultWallTemplate();
+    const t = { ...defaultWallTemplate(), panels: [newPanel('A'), newPanel('B'), newPanel('C')] };
     t.panels[1].holdsImages = false;
     const d = distributeImages(t, images);
     expect(d.panels[0].frames).toHaveLength(7);
@@ -39,6 +51,12 @@ describe('wall designs', () => {
     expect(d.panels[2].frames).toHaveLength(6);
     expect(d.panels[0].frames[0].imageId).toBe('img-1.jpg');
     expect(d.panels[2].frames.at(-1)!.imageId).toBe('img-13.jpg');
+  });
+
+  it('starts the template as one 630 × 1500 mm photo wall', () => {
+    const t = defaultWallTemplate();
+    expect(t.panels).toHaveLength(1);
+    expect([t.panels[0].widthMm, t.panels[0].heightMm]).toEqual([630, 1500]);
   });
 
   it('makes empty slots on the template', () => {

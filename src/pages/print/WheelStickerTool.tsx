@@ -1,8 +1,21 @@
 import { useMemo, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { pathToSvg } from '../../print/geometry';
-import { resizeSegments, type WheelDesign, type WheelSegment } from '../../print/designs';
-import { discCut, dividerLines, segmentShape, sheetLayout } from '../../print/wheelLayout';
+import {
+  NINE_UNITED_WHEEL,
+  resizeSegments,
+  type WheelDesign,
+  type WheelKnob,
+  type WheelSegment,
+} from '../../print/designs';
+import {
+  discCut,
+  dividerLines,
+  knobOutline,
+  knobSegment,
+  segmentShape,
+  sheetLayout,
+} from '../../print/wheelLayout';
 import { buildWheelPdf } from '../../print/wheelPdf';
 import { artworkDataUrl, loadFonts } from '../../print/assets';
 import { downloadBytes } from '../../utils/download';
@@ -30,6 +43,8 @@ export function WheelStickerTool({ initial, by }: Props) {
   const set = (patch: Partial<WheelDesign>) => setD((cur) => ({ ...cur, ...patch }));
   const setItem = (i: number, patch: Partial<WheelSegment>) =>
     setD((cur) => ({ ...cur, items: cur.items.map((it, k) => (k === i ? { ...it, ...patch } : it)) }));
+  const setKnob = (patch: Partial<WheelKnob>) =>
+    setD((cur) => ({ ...cur, knob: cur.knob ? { ...cur.knob, ...patch } : null }));
   const setSegments = (n: number) => {
     const segments = Math.round(n);
     setD((cur) => ({ ...cur, segments, items: resizeSegments(cur.items, segments) }));
@@ -82,10 +97,28 @@ export function WheelStickerTool({ initial, by }: Props) {
       </div>
 
       <div className="sk-pt-panel">
-        <Section title="Wheel">
+        <Section
+          title="Wheel"
+          aside={
+            <Button
+              variant="text"
+              size="sm"
+              onClick={() =>
+                setD((cur) => ({
+                  ...cur,
+                  ...NINE_UNITED_WHEEL,
+                  knob: { ...NINE_UNITED_WHEEL.knob },
+                  items: resizeSegments(cur.items, NINE_UNITED_WHEEL.segments),
+                }))
+              }
+            >
+              Reset to drawing
+            </Button>
+          }
+        >
           <p className="sk-pt-note">
-            Measure the wheel face before printing — these are starting values. The ordered wheel is the
-            tabletop model (297 × 210 × 100 mm).
+            Set from Nine United's drawing (21.10.2026): Ø198 mm UV-printed disc, ten 36° segments, Ø60 mm
+            logo disc in the centre. Check the knob position on the sample before printing.
           </p>
           <div className="sk-pt-grid">
             <NumberField label="Segments" value={d.segments} min={2} max={48} onChange={setSegments} />
@@ -123,9 +156,69 @@ export function WheelStickerTool({ initial, by }: Props) {
               max={180}
               step={0.5}
               onChange={(v) => set({ startDeg: v })}
-              hint="Segment 1 sits at 12 o'clock"
+              hint="Where segment 1's centre sits, clockwise from 12 o'clock"
             />
           </div>
+          <label className="sk-pt-check">
+            <input
+              type="checkbox"
+              checked={Boolean(d.knob)}
+              onChange={(e) => set({ knob: e.target.checked ? { ...NINE_UNITED_WHEEL.knob } : null })}
+            />
+            Cut a hole for the knob on the wheel face
+          </label>
+          {d.knob && (
+            <>
+              <div className="sk-pt-grid">
+                <NumberField
+                  label="Knob position"
+                  unit="°"
+                  value={d.knob.angleDeg}
+                  min={0}
+                  max={360}
+                  onChange={(v) => setKnob({ angleDeg: v })}
+                  hint="Clockwise from 12 o'clock"
+                />
+                <NumberField
+                  label="Knob centre from middle"
+                  unit="mm"
+                  value={d.knob.rMm}
+                  min={0}
+                  max={d.outerMm / 2}
+                  step={0.5}
+                  onChange={(v) => setKnob({ rMm: v })}
+                />
+                <NumberField
+                  label="Knob length"
+                  unit="mm"
+                  value={d.knob.lengthMm}
+                  min={1}
+                  step={0.1}
+                  onChange={(v) => setKnob({ lengthMm: v })}
+                  hint="Along the radius"
+                />
+                <NumberField
+                  label="Knob width"
+                  unit="mm"
+                  value={d.knob.widthMm}
+                  min={1}
+                  step={0.1}
+                  onChange={(v) => setKnob({ widthMm: v })}
+                />
+                <NumberField
+                  label="Clearance"
+                  unit="mm"
+                  value={d.knob.clearanceMm}
+                  min={0}
+                  step={0.5}
+                  onChange={(v) => setKnob({ clearanceMm: v })}
+                />
+              </div>
+              <p className="sk-pt-note">
+                The knob sits on segment {knobSegment(d) + 1}; its sticker gets a hole cut around it.
+              </p>
+            </>
+          )}
         </Section>
 
         <Section title="Text">
@@ -200,6 +293,18 @@ export function WheelStickerTool({ initial, by }: Props) {
             </div>
           ) : (
             <>
+              <div className="sk-pt-grid">
+                <NumberField
+                  label="Inset from segment edges"
+                  unit="mm"
+                  value={d.insetMm}
+                  min={0}
+                  max={10}
+                  step={0.5}
+                  onChange={(v) => set({ insetMm: v })}
+                  hint="Room to place the sticker on the printed segment"
+                />
+              </div>
               <div className="sk-pt-chips">
                 {SHEETS.map((s) => (
                   <button
@@ -348,7 +453,7 @@ function SegmentArt({
   pointUp: boolean;
   id: string;
 }) {
-  const it = d.items[i];
+  const it = d.items[i % d.items.length];
   const s = segmentShape(d, i, cx, cy, pointUp);
   const lines = it.label
     .split('\n')
@@ -405,6 +510,7 @@ function WheelPreview({ d: design }: { d: WheelDesign }) {
   const d: WheelDesign = wedges ? { ...design, cutMode: 'whole', dividerMm: 0 } : design;
   const R = d.outerMm / 2 + d.bleedMm + 4;
   const dividers = dividerLines(d, 0, 0);
+  const knob = knobOutline(d, 0, 0);
   return (
     <svg
       className="sk-pt-wheel"
@@ -424,7 +530,10 @@ function WheelPreview({ d: design }: { d: WheelDesign }) {
         <path d={pathToSvg(discCut(d, 0, 0))} className="sk-pt-cut" fill="none" />
       )}
       <circle r={d.outerMm / 2 + d.bleedMm} className="sk-pt-trim" />
-      {d.hubMm > 0 && <circle r={Math.max(0, d.hubMm / 2 - d.bleedMm)} fill="var(--bg-2)" />}
+      {d.hubMm > 0 && (
+        <circle r={wedges ? d.hubMm / 2 : Math.max(0, d.hubMm / 2 - d.bleedMm)} fill="var(--bg-2)" />
+      )}
+      {knob && <path d={pathToSvg(knob)} className="sk-pt-knob" />}
       <path d={`M-3 ${-R} L3 ${-R} L0 ${-R + 5} Z`} fill="var(--fg-1)" />
     </svg>
   );

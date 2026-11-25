@@ -4,10 +4,11 @@
  */
 import {
   circlePath,
-  sectorBounds,
+  offsetWedgePath,
+  pathBounds,
+  radialRectPath,
   sectorPath,
   segmentAngles,
-  wedgeBleedAngle,
   type PathCmd,
   type Rect,
 } from './geometry';
@@ -19,7 +20,7 @@ export interface SegmentShape {
   center: number;
   /** Area to fill with colour (includes bleed). */
   print: PathCmd[];
-  /** Where the plotter cuts (separate wedges only). */
+  /** Where the plotter cuts (separate stickers only), including any knob hole. */
   cut: PathCmd[] | null;
   /** Artwork box in the segment's local frame (segment pointing up, centre at 0,0). */
   imageBox: Rect;
@@ -28,9 +29,53 @@ export interface SegmentShape {
 }
 
 const UP = -Math.PI / 2;
+const rad = (d: number) => (d * Math.PI) / 180;
+
+/** Printed area of one segment, centred on `center`. */
+function printPath(d: WheelDesign, cx: number, cy: number, center: number, half: number): PathCmd[] {
+  const r1 = d.hubMm / 2;
+  const r2 = d.outerMm / 2;
+  if (d.cutMode === 'segments') {
+    return offsetWedgePath(cx, cy, r1, r2, center - half, center + half, d.bleedMm - d.insetMm);
+  }
+  return sectorPath(cx, cy, Math.max(0, r1 - d.bleedMm), r2 + d.bleedMm, center - half, center + half);
+}
+
+/** Index of the segment the knob sits on, or -1. */
+export function knobSegment(d: WheelDesign): number {
+  if (!d.knob) return -1;
+  const span = 360 / d.segments;
+  const fromFirstEdge = (((d.knob.angleDeg - d.startDeg + span / 2) % 360) + 360) % 360;
+  return Math.floor(fromFirstEdge / span) % d.segments;
+}
 
 /**
- * Segment i drawn around (cx, cy). `pointUp` draws it as a separate wedge
+ * The hole to cut for the knob, drawn for segment i at its position (or
+ * rotated with it when the segment is drawn pointing up). Null when the knob
+ * is not on this segment.
+ */
+export function knobHole(
+  d: WheelDesign,
+  i: number,
+  cx: number,
+  cy: number,
+  pointUp: boolean,
+): PathCmd[] | null {
+  const k = d.knob;
+  if (!k || knobSegment(d) !== i) return null;
+  const { center } = segmentAngles(d, i);
+  const angle = rad(-90 + k.angleDeg) + (pointUp ? UP - center : 0);
+  return radialRectPath(cx, cy, angle, k.rMm, k.lengthMm + 2 * k.clearanceMm, k.widthMm + 2 * k.clearanceMm);
+}
+
+/** The knob itself (no clearance), for the preview. */
+export function knobOutline(d: WheelDesign, cx: number, cy: number): PathCmd[] | null {
+  const k = d.knob;
+  return k ? radialRectPath(cx, cy, rad(-90 + k.angleDeg), k.rMm, k.lengthMm, k.widthMm) : null;
+}
+
+/**
+ * Segment i drawn around (cx, cy). `pointUp` draws it as a separate sticker
  * pointing to 12 o'clock (sheet layout) instead of at its place on the wheel.
  */
 export function segmentShape(
@@ -42,23 +87,22 @@ export function segmentShape(
 ): SegmentShape {
   const r1 = d.hubMm / 2;
   const r2 = d.outerMm / 2;
-  const b = d.bleedMm;
   const { center: wheelCenter, half } = segmentAngles(d, i);
   const center = pointUp ? UP : wheelCenter;
   const separate = d.cutMode === 'segments';
-  const widen = separate ? wedgeBleedAngle(d, b) : 0;
-  const pr1 = Math.max(0, r1 - b);
-  const pr2 = r2 + b;
-  const print = sectorPath(cx, cy, pr1, pr2, center - half - widen, center + half + widen);
-  const cut = separate ? sectorPath(cx, cy, r1, r2, center - half, center + half) : null;
-  const imageBox = sectorBounds(0, 0, pr1, pr2, UP - half - widen, UP + half + widen);
+  const cut = separate
+    ? [
+        ...offsetWedgePath(cx, cy, r1, r2, center - half, center + half, -d.insetMm),
+        ...(knobHole(d, i, cx, cy, pointUp) ?? []),
+      ]
+    : null;
   const tr = r1 + (r2 - r1) * d.textPosition;
   return {
     index: i,
     center,
-    print,
+    print: printPath(d, cx, cy, center, half),
     cut,
-    imageBox,
+    imageBox: pathBounds(printPath(d, 0, 0, UP, half)),
     text: {
       x: cx + tr * Math.cos(center),
       y: cy + tr * Math.sin(center),
@@ -67,10 +111,12 @@ export function segmentShape(
   };
 }
 
-/** Whole-disc cut lines: the rim and, if there is one, the hub hole. */
+/** Whole-disc cut lines: the rim, the hub hole if there is one, and the knob hole. */
 export function discCut(d: WheelDesign, cx: number, cy: number): PathCmd[] {
   const out = circlePath(cx, cy, d.outerMm / 2);
   if (d.hubMm > 0) out.push(...circlePath(cx, cy, d.hubMm / 2));
+  const k = knobSegment(d);
+  if (k >= 0) out.push(...(knobHole(d, k, cx, cy, false) ?? []));
   return out;
 }
 
@@ -91,14 +137,19 @@ export function dividerLines(d: WheelDesign, cx: number, cy: number): PathCmd[] 
 
 export interface SheetSlot {
   page: number;
-  /** Wheel centre to draw the upright wedge around, sheet mm. */
+  /** Wheel centre to draw the upright sticker around, sheet mm. */
   cx: number;
   cy: number;
 }
 
-/** Where each separate wedge goes on the sticker sheets. */
+/** Bounding box of one upright sticker including bleed, around a wheel centre at 0,0. */
+export function stickerBounds(d: WheelDesign): Rect {
+  return pathBounds(printPath(d, 0, 0, UP, Math.PI / d.segments));
+}
+
+/** Where each separate sticker goes on the sheets. */
 export function sheetLayout(d: WheelDesign): { slots: SheetSlot[]; perPage: number; cell: Rect } {
-  const bounds = sectorBoundsOf(d);
+  const bounds = stickerBounds(d);
   const { widthMm: W, heightMm: H, gapMm: g, marginMm: m } = d.sheet;
   const cols = Math.max(0, Math.floor((W - 2 * m + g) / (bounds.w + g)));
   const rows = Math.max(0, Math.floor((H - 2 * m + g) / (bounds.h + g)));
@@ -114,14 +165,4 @@ export function sheetLayout(d: WheelDesign): { slots: SheetSlot[]; perPage: numb
     slots.push({ page: Math.floor(i / perPage), cx: x - bounds.x, cy: y - bounds.y });
   }
   return { slots, perPage, cell: bounds };
-}
-
-/** Bounding box of one upright wedge including bleed, around a wheel centre at 0,0. */
-export function sectorBoundsOf(d: WheelDesign): Rect {
-  const r1 = d.hubMm / 2;
-  const r2 = d.outerMm / 2;
-  const b = d.bleedMm;
-  const half = Math.PI / d.segments;
-  const widen = d.cutMode === 'segments' ? wedgeBleedAngle(d, b) : 0;
-  return sectorBounds(0, 0, Math.max(0, r1 - b), r2 + b, UP - half - widen, UP + half + widen);
 }

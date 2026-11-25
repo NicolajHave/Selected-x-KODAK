@@ -496,9 +496,8 @@ function WallEditor({
           )}
           {isTemplate && (
             <p className="sk-pt-note">
-              Panel sizes here are placeholders (1000 × 2000 mm) until BuskMogensen confirms the print sizes.
-              Walls start from this template the first time they are opened; "Restart from template" picks up
-              later changes.
+              The photo wall is 630 × 1500 mm. Check the bleed with the printer. Walls start from this
+              template the first time they are opened; "Restart from template" picks up later changes.
             </p>
           )}
         </Section>

@@ -82,7 +82,7 @@ function drawSegment(
   fonts: Fonts,
   art: Map<string, PDFImage>,
 ) {
-  const seg = d.items[i];
+  const seg = d.items[i % d.items.length];
   const shape = segmentShape(d, i, cx, cy, pointUp);
   fillPath(s, shape.print, seg.background);
   const img = seg.imageDataUrl ? art.get(seg.imageDataUrl) : undefined;
