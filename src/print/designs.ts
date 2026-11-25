@@ -17,6 +17,20 @@ export interface WheelSegment {
 }
 
 export type CutMode = 'whole' | 'segments';
+
+/** Something mounted on the wheel face that stickers must leave a hole for. */
+export interface WheelKnob {
+  /** Clockwise from 12 o'clock, degrees. */
+  angleDeg: number;
+  /** Centre of the knob from the wheel centre, mm. */
+  rMm: number;
+  /** Along the radius, mm. */
+  lengthMm: number;
+  /** Across the radius, mm. */
+  widthMm: number;
+  /** Extra room cut around it, mm. */
+  clearanceMm: number;
+}
 export type TextOrientation = 'radial' | 'tangential';
 
 export interface WheelDesign {
@@ -33,34 +47,54 @@ export interface WheelDesign {
   textPosition: number;
   orientation: TextOrientation;
   cutMode: CutMode;
+  /** Separate stickers: gap kept inside each printed segment, mm. */
+  insetMm: number;
+  /** Hole cut in the sticker for the knob; null = no knob. */
+  knob: WheelKnob | null;
   sheet: { widthMm: number; heightMm: number; gapMm: number; marginMm: number };
   items: WheelSegment[];
 }
 
-export const KODAK_RED = '#d92f1f';
-export const KODAK_YELLOW = '#f5b700';
+/** Pantone 485C as specified for the wheel print. */
+export const KODAK_RED = '#ed0000';
+/** Pantone 11-4201 TPG Cloud Dancer. */
+export const CLOUD_DANCER = '#f0eee9';
 export const INK = '#121212';
 
 const DEFAULT_SEGMENTS: WheelSegment[] = [
   { label: 'KODAK\nCAMERA', background: KODAK_RED, textColor: '#ffffff' },
-  { label: 'TOTEBAG', background: KODAK_YELLOW, textColor: INK },
+  { label: 'TOTEBAG', background: CLOUD_DANCER, textColor: KODAK_RED },
 ];
+
+/**
+ * The tabletop wheel from Nine United's engineering drawing (21.10.2026):
+ * Ø198 mm UV-printed acrylic disc, ten 36° segments with a boundary at
+ * 12 o'clock, Ø60 mm logo disc in the centre, and a 12 × 8.7 mm knob near the
+ * rim at about 3 o'clock. The knob's radius is read off the drawing — check it
+ * on the sample.
+ */
+export const NINE_UNITED_WHEEL = {
+  segments: 10,
+  outerMm: 198,
+  hubMm: 60,
+  startDeg: 18,
+  knob: { angleDeg: 90, rMm: 83, lengthMm: 12, widthMm: 8.7, clearanceMm: 2 },
+} as const;
 
 export function defaultWheel(): WheelDesign {
   return {
     version: 1,
-    segments: 12,
-    outerMm: 200,
-    hubMm: 50,
-    startDeg: 0,
+    ...NINE_UNITED_WHEEL,
+    knob: { ...NINE_UNITED_WHEEL.knob },
     bleedMm: 2,
     dividerMm: 0,
-    fontSizeMm: 6,
-    textPosition: 0.55,
+    fontSizeMm: 5.5,
+    textPosition: 0.42,
     orientation: 'radial',
-    cutMode: 'whole',
+    cutMode: 'segments',
+    insetMm: 2,
     sheet: { widthMm: 420, heightMm: 297, gapMm: 4, marginMm: 10 },
-    items: resizeSegments([], 12),
+    items: resizeSegments([], NINE_UNITED_WHEEL.segments),
   };
 }
 
@@ -121,22 +155,23 @@ export interface WallDesign {
 let seq = 0;
 export const newId = (prefix: string) => `${prefix}-${Date.now().toString(36)}-${(seq++).toString(36)}`;
 
-export function newPanel(name: string, widthMm = 1000, heightMm = 2000): WallPanel {
+export function newPanel(name: string, widthMm = 630, heightMm = 1500): WallPanel {
   return { id: newId('p'), name, widthMm, heightMm, background: '#ffffff', holdsImages: true, frames: [] };
 }
 
 /**
- * Starting template. The panel sizes are placeholders until BuskMogensen
- * confirms the real print sizes — HQ edits them once on the template.
+ * Starting template: the hero wall's photo surface, 630 mm wide × 1500 mm high
+ * (confirmed by Nicolaj 25.11.2026). Bleed stays at 5 mm until the printer says
+ * otherwise; HQ can change everything on the template.
  */
 export function defaultWallTemplate(): WallDesign {
   return {
     version: 1,
     name: 'Hero wall template',
     bleedMm: 5,
-    marginMm: 60,
-    gutterMm: 20,
-    panels: [newPanel('Panel 1 · left'), newPanel('Panel 2 · centre'), newPanel('Panel 3 · right')],
+    marginMm: 30,
+    gutterMm: 10,
+    panels: [newPanel('Photo wall', 630, 1500)],
   };
 }
 

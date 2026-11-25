@@ -6,7 +6,7 @@ import { PT_PER_MM } from './geometry';
 import { defaultWallTemplate, defaultWheel, distributeImages } from './designs';
 import { buildWheelPdf } from './wheelPdf';
 import { buildWallPrintPdf, buildWallProofPdf } from './wallPdf';
-import { sheetLayout } from './wheelLayout';
+import { knobSegment, segmentShape, sheetLayout } from './wheelLayout';
 
 const root = resolve(__dirname, '..');
 const fonts = {
@@ -26,7 +26,7 @@ function hasCutContour(doc: PDFDocument, pageIndex: number) {
 
 describe('wheel sticker PDF', () => {
   it('makes one round sticker with trim = outer diameter and a CutContour path', async () => {
-    const d = { ...defaultWheel(), outerMm: 190, hubMm: 40, bleedMm: 2 };
+    const d = { ...defaultWheel(), cutMode: 'whole' as const, outerMm: 190, hubMm: 40, bleedMm: 2 };
     const doc = await PDFDocument.load(await buildWheelPdf(d, fonts));
     expect(doc.getPageCount()).toBe(1);
     const trim = doc.getPage(0).getTrimBox();
@@ -45,6 +45,16 @@ describe('wheel sticker PDF', () => {
     expect(doc.getPageCount()).toBe(Math.ceil(12 / perPage));
     expect(mm(doc.getPage(0).getWidth())).toBeCloseTo(420, 1);
     expect(hasCutContour(doc, 0)).toBe(true);
+  });
+
+  it('cuts the knob hole into the sticker of the segment it sits on', async () => {
+    const d = defaultWheel();
+    expect(knobSegment(d)).toBe(2);
+    expect(segmentShape(d, 2, 0, 0, true).cut!.filter((c) => c.op === 'M')).toHaveLength(2);
+    expect(segmentShape(d, 1, 0, 0, true).cut!.filter((c) => c.op === 'M')).toHaveLength(1);
+    expect(segmentShape({ ...d, knob: null }, 2, 0, 0, true).cut!.filter((c) => c.op === 'M')).toHaveLength(
+      1,
+    );
   });
 
   it('refuses a sheet too small for one wedge', async () => {
@@ -66,17 +76,21 @@ describe('hero wall PDFs', () => {
   it('writes one 1:1 page per panel with bleed, and reports resolution', async () => {
     const { bytes, checks } = await buildWallPrintPdf(design, resolver, fonts);
     const doc = await PDFDocument.load(bytes);
-    expect(doc.getPageCount()).toBe(3);
+    expect(doc.getPageCount()).toBe(1);
     const trim = doc.getPage(0).getTrimBox();
-    expect(mm(trim.width)).toBeCloseTo(1000, 0);
-    expect(mm(trim.height)).toBeCloseTo(2000, 0);
-    expect(mm(doc.getPage(0).getBleedBox().width)).toBeCloseTo(1010, 0);
+    expect(mm(trim.width)).toBeCloseTo(630, 0);
+    expect(mm(trim.height)).toBeCloseTo(1500, 0);
+    expect(mm(doc.getPage(0).getBleedBox().width)).toBeCloseTo(640, 0);
 
     expect(checks.filter((c) => c.source === 'empty')).toHaveLength(1);
     const placed = checks.filter((c) => c.dpi !== undefined);
     expect(placed).toHaveLength(8);
-    // 1326 px across a frame ~400 mm wide is well under 100 ppi
-    expect(placed.every((c) => c.rating === 'low')).toBe(true);
+    // 1326 px across a ~280 mm cell (2 columns on 630 mm) prints at ~120 ppi
+    for (const c of placed) {
+      expect(c.dpi).toBeGreaterThan(100);
+      expect(c.dpi).toBeLessThan(150);
+      expect(c.rating).toBe('ok');
+    }
   });
 
   it('embeds each photo once however often it is used', async () => {

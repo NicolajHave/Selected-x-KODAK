@@ -3,6 +3,7 @@ import {
   coverPlacement,
   effectiveDpi,
   gridCells,
+  offsetWedgePath,
   rateDpi,
   sectorBounds,
   sectorPath,
@@ -90,5 +91,31 @@ describe('splitEvenly', () => {
       [4, 5],
       [6, 7],
     ]);
+  });
+});
+
+describe('offsetWedgePath', () => {
+  /* Distance from a point to the radial line at angle a through the origin. */
+  const toEdge = (x: number, y: number, a: number) => Math.abs(-Math.sin(a) * x + Math.cos(a) * y);
+  const a0 = -Math.PI / 2 - Math.PI / 10;
+  const a1 = -Math.PI / 2 + Math.PI / 10;
+
+  it('moves the straight edges parallel by exactly the offset', () => {
+    for (const off of [2, -2]) {
+      const p = offsetWedgePath(0, 0, 30, 99, a0, a1, off);
+      const corners = p.filter((c) => c.op === 'M' || c.op === 'L') as { x: number; y: number }[];
+      // first corner lies on the a0 side, the line's corner on the a1 side
+      expect(toEdge(corners[0].x, corners[0].y, a0)).toBeCloseTo(2, 6);
+      expect(toEdge(corners[1].x, corners[1].y, a1)).toBeCloseTo(2, 6);
+      expect(Math.hypot(corners[0].x, corners[0].y)).toBeCloseTo(99 + off, 6);
+      expect(Math.hypot(corners[1].x, corners[1].y)).toBeCloseTo(30 - off, 6);
+    }
+  });
+
+  it('ends in a point when the hub is too small for the inset', () => {
+    const p = offsetWedgePath(0, 0, 0, 99, a0, a1, -3);
+    const apex = p.filter((c) => c.op === 'L')[0] as { x: number; y: number };
+    expect(apex.x).toBeCloseTo(0, 6);
+    expect(-apex.y).toBeCloseTo(3 / Math.sin(Math.PI / 10), 6);
   });
 });

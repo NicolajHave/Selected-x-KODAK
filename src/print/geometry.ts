@@ -128,13 +128,90 @@ export function segmentAngles(g: WheelGeometry, i: number): { center: number; ha
 }
 
 /**
- * The extra angle a separately cut wedge is widened by, so its straight edges
- * get at least `bleed` mm of bleed. Measured at the inner edge (or a quarter of
- * the radius for a pie slice), which over-bleeds slightly towards the rim.
+ * A ring sector with every edge moved by `off` mm: positive grows it (bleed),
+ * negative shrinks it (a sticker inset from the printed segment). The straight
+ * edges move parallel to themselves, so the distance is exact everywhere.
+ * When the inner arc disappears the shape ends in a point.
  */
-export function wedgeBleedAngle(g: WheelGeometry, bleed: number): number {
-  const ref = Math.max(g.hubMm / 2, g.outerMm / 8);
-  return bleed / ref;
+export function offsetWedgePath(
+  cx: number,
+  cy: number,
+  r1: number,
+  r2: number,
+  a0: number,
+  a1: number,
+  off: number,
+): PathCmd[] {
+  const R2 = r2 + off;
+  const R1 = r1 - off;
+  const half = (a1 - a0) / 2;
+  const mid = a0 + half;
+  const da = (r: number) => Math.asin(Math.max(-1, Math.min(1, off / r)));
+  const cmds: PathCmd[] = [
+    { op: 'M', x: cx + R2 * Math.cos(a0 - da(R2)), y: cy + R2 * Math.sin(a0 - da(R2)) },
+    ...arcCommands(cx, cy, R2, a0 - da(R2), a1 + da(R2)),
+  ];
+  /* The offset edges meet this far from the centre (negative = behind it). */
+  const apex = -off / Math.sin(half);
+  if (R1 > Math.abs(off) + 1e-6 && R1 > apex) {
+    cmds.push({ op: 'L', x: cx + R1 * Math.cos(a1 + da(R1)), y: cy + R1 * Math.sin(a1 + da(R1)) });
+    cmds.push(...arcCommands(cx, cy, R1, a1 + da(R1), a0 - da(R1)));
+  } else {
+    cmds.push({ op: 'L', x: cx + apex * Math.cos(mid), y: cy + apex * Math.sin(mid) });
+  }
+  cmds.push({ op: 'Z' });
+  return cmds;
+}
+
+/**
+ * Bounding box of a path. Bezier control points are included, which can make
+ * the box a hair larger than the curve — never smaller.
+ */
+export function pathBounds(cmds: PathCmd[]): Rect {
+  const xs: number[] = [];
+  const ys: number[] = [];
+  for (const c of cmds) {
+    if (c.op === 'Z') continue;
+    xs.push(c.x);
+    ys.push(c.y);
+    if (c.op === 'C') {
+      xs.push(c.x1, c.x2);
+      ys.push(c.y1, c.y2);
+    }
+  }
+  const x = Math.min(...xs);
+  const y = Math.min(...ys);
+  return { x, y, w: Math.max(...xs) - x, h: Math.max(...ys) - y };
+}
+
+/**
+ * Rectangle centred `r` mm from (cx, cy) along `angle`, `length` mm along the
+ * radius and `width` mm across it.
+ */
+export function radialRectPath(
+  cx: number,
+  cy: number,
+  angle: number,
+  r: number,
+  length: number,
+  width: number,
+): PathCmd[] {
+  const u = { x: Math.cos(angle), y: Math.sin(angle) };
+  const v = { x: -u.y, y: u.x };
+  const pt = (a: number, b: number) => ({ x: cx + u.x * (r + a) + v.x * b, y: cy + u.y * (r + a) + v.y * b });
+  const corners = [
+    pt(-length / 2, -width / 2),
+    pt(length / 2, -width / 2),
+    pt(length / 2, width / 2),
+    pt(-length / 2, width / 2),
+  ];
+  return [
+    { op: 'M', ...corners[0] },
+    { op: 'L', ...corners[1] },
+    { op: 'L', ...corners[2] },
+    { op: 'L', ...corners[3] },
+    { op: 'Z' },
+  ];
 }
 
 /** Bounding box of a sector, found by sampling — robust for any span. */

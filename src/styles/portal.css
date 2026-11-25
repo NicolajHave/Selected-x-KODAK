@@ -922,6 +922,7 @@
 .sk-portal .sk-pt-sheet { margin-top: 16px; border-top: 1px solid var(--rule-1); padding-top: 12px; }
 .sk-portal .sk-pt-sheetsvg { display: block; width: 100%; margin-top: 8px; }
 .sk-portal .sk-pt-cut { fill: none; stroke: #e6007e; stroke-width: 0.4; stroke-dasharray: 2 1.2; }
+.sk-portal .sk-pt-knob { fill: var(--sk-steel-light); stroke: var(--sk-graphite); stroke-width: 0.4; }
 .sk-portal .sk-pt-trim { fill: none; stroke: var(--sk-stone); stroke-width: 0.3; stroke-dasharray: 1 1; }
 
 .sk-portal .sk-pt-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 10px 12px; margin-bottom: 10px; }
