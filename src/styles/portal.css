@@ -1006,3 +1006,5 @@
   .sk-portal .sk-pt-layout, .sk-portal .sk-pt-wall { grid-template-columns: 1fr; }
   .sk-portal .sk-pt-stage, .sk-portal .sk-pt-walls { position: static; max-height: none; }
 }
+.sk-portal .sk-pt-export { display: flex; flex-direction: column; gap: 4px; }
+.sk-portal .sk-pt-export .sk-pt-note { margin: 0 0 6px; }

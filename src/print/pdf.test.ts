@@ -66,6 +66,23 @@ describe('wheel sticker PDF', () => {
     expect(hasCutContour(doc, 0)).toBe(true);
   });
 
+  it('makes a blank kiss-cut file and a print-only file in the same positions', async () => {
+    const d = defaultWheel();
+    const cut = await PDFDocument.load(await buildWheelPdf(d, fonts, 'cut'));
+    expect(hasCutContour(cut, 0)).toBe(true);
+    const fontsOn = (doc: PDFDocument) =>
+      doc.getPage(0).node.Resources()!.lookupMaybe(PDFName.of('Font'), PDFDict)?.keys().length ?? 0;
+    expect(fontsOn(cut)).toBe(0); // no text
+
+    const print = await PDFDocument.load(await buildWheelPdf(d, fonts, 'print'));
+    expect(hasCutContour(print, 0)).toBe(false); // nothing an office printer would print as magenta lines
+    expect(fontsOn(print)).toBeGreaterThan(0);
+    for (const doc of [cut, print]) {
+      expect(doc.getPageCount()).toBe(1);
+      expect(mm(doc.getPage(0).getWidth())).toBeCloseTo(210, 1);
+    }
+  });
+
   it('lays separate wedges out over as many sheets as needed', async () => {
     const d = {
       ...defaultWheel(),
