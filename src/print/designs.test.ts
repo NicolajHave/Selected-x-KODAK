@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest';
 import {
-  NINE_UNITED_WHEEL,
   defaultWallTemplate,
   defaultWheel,
   distributeImages,
@@ -26,7 +25,8 @@ describe('wheel designs', () => {
     expect(d.outerMm).toBe(198);
     expect(d.hubMm).toBe(60);
     expect(d.startDeg).toBe(18);
-    expect(d.knob).toEqual(NINE_UNITED_WHEEL.knob);
+    expect(d.knob).toBeNull(); // position not confirmed, so no hole by default
+    expect([d.sheet.widthMm, d.sheet.heightMm]).toEqual([210, 297]);
     expect(d.items).toHaveLength(10);
   });
 

@@ -4,6 +4,8 @@
  */
 import {
   circlePath,
+  minDistance,
+  pathPoints,
   offsetWedgePath,
   pathBounds,
   radialRectPath,
@@ -28,7 +30,9 @@ export interface SegmentShape {
   text: { x: number; y: number; angle: number };
 }
 
-const UP = -Math.PI / 2;
+/** Centre angles for stickers drawn on a sheet, pointing to 12 or 6 o'clock. */
+export const UP = -Math.PI / 2;
+export const DOWN = Math.PI / 2;
 const rad = (d: number) => (d * Math.PI) / 180;
 
 /** Printed area of one segment, centred on `center`. */
@@ -50,21 +54,21 @@ export function knobSegment(d: WheelDesign): number {
 }
 
 /**
- * The hole to cut for the knob, drawn for segment i at its position (or
- * rotated with it when the segment is drawn pointing up). Null when the knob
- * is not on this segment.
+ * The hole to cut for the knob, drawn for segment i at its place on the wheel
+ * (drawAt = null) or turned with the sticker when it is drawn at another
+ * angle. Null when the knob is not on this segment.
  */
 export function knobHole(
   d: WheelDesign,
   i: number,
   cx: number,
   cy: number,
-  pointUp: boolean,
+  drawAt: number | null,
 ): PathCmd[] | null {
   const k = d.knob;
   if (!k || knobSegment(d) !== i) return null;
   const { center } = segmentAngles(d, i);
-  const angle = rad(-90 + k.angleDeg) + (pointUp ? UP - center : 0);
+  const angle = rad(-90 + k.angleDeg) + (drawAt === null ? 0 : drawAt - center);
   return radialRectPath(cx, cy, angle, k.rMm, k.lengthMm + 2 * k.clearanceMm, k.widthMm + 2 * k.clearanceMm);
 }
 
@@ -75,25 +79,26 @@ export function knobOutline(d: WheelDesign, cx: number, cy: number): PathCmd[] |
 }
 
 /**
- * Segment i drawn around (cx, cy). `pointUp` draws it as a separate sticker
- * pointing to 12 o'clock (sheet layout) instead of at its place on the wheel.
+ * Segment i drawn around (cx, cy): at its place on the wheel (drawAt = null),
+ * or as a separate sticker turned so its centre line points along drawAt
+ * (UP / DOWN on a sheet).
  */
 export function segmentShape(
   d: WheelDesign,
   i: number,
   cx: number,
   cy: number,
-  pointUp: boolean,
+  drawAt: number | null,
 ): SegmentShape {
   const r1 = d.hubMm / 2;
   const r2 = d.outerMm / 2;
   const { center: wheelCenter, half } = segmentAngles(d, i);
-  const center = pointUp ? UP : wheelCenter;
+  const center = drawAt ?? wheelCenter;
   const separate = d.cutMode === 'segments';
   const cut = separate
     ? [
         ...offsetWedgePath(cx, cy, r1, r2, center - half, center + half, -d.insetMm),
-        ...(knobHole(d, i, cx, cy, pointUp) ?? []),
+        ...(knobHole(d, i, cx, cy, drawAt) ?? []),
       ]
     : null;
   const tr = r1 + (r2 - r1) * d.textPosition;
@@ -116,7 +121,7 @@ export function discCut(d: WheelDesign, cx: number, cy: number): PathCmd[] {
   const out = circlePath(cx, cy, d.outerMm / 2);
   if (d.hubMm > 0) out.push(...circlePath(cx, cy, d.hubMm / 2));
   const k = knobSegment(d);
-  if (k >= 0) out.push(...(knobHole(d, k, cx, cy, false) ?? []));
+  if (k >= 0) out.push(...(knobHole(d, k, cx, cy, null) ?? []));
   return out;
 }
 
@@ -137,32 +142,85 @@ export function dividerLines(d: WheelDesign, cx: number, cy: number): PathCmd[] 
 
 export interface SheetSlot {
   page: number;
-  /** Wheel centre to draw the upright sticker around, sheet mm. */
+  /** Which segment's sticker goes here (spares repeat the segments in order). */
+  segment: number;
+  /** Wheel centre to draw the sticker around, sheet mm. */
   cx: number;
   cy: number;
+  /** Direction the sticker points: UP or DOWN. */
+  angle: number;
 }
 
-/** Bounding box of one upright sticker including bleed, around a wheel centre at 0,0. */
-export function stickerBounds(d: WheelDesign): Rect {
-  return pathBounds(printPath(d, 0, 0, UP, Math.PI / d.segments));
+/** Bounding box of one sticker including bleed, around a wheel centre at 0,0. */
+export function stickerBounds(d: WheelDesign, angle = UP): Rect {
+  return pathBounds(printPath(d, 0, 0, angle, Math.PI / d.segments));
 }
 
-/** Where each separate sticker goes on the sheets. */
+/**
+ * How far apart (centre to centre) an UP and a DOWN sticker must sit side by
+ * side in a row so their printed areas keep `gap` mm apart.
+ */
+export function nestedPitch(d: WheelDesign): number {
+  const half = Math.PI / d.segments;
+  const up = pathPoints(printPath(d, 0, 0, UP, half), 0.5);
+  const b = stickerBounds(d, UP);
+  /* A DOWN sticker sharing the row band: mirror of UP in that band. */
+  const downDy = 2 * b.y + b.h;
+  const down = pathPoints(printPath(d, 0, downDy, DOWN, half), 0.5);
+  const gap = d.sheet.gapMm;
+  let lo = 0;
+  let hi = b.w + gap;
+  for (let k = 0; k < 40; k++) {
+    const mid = (lo + hi) / 2;
+    const shifted = down.map((p) => ({ x: p.x + mid, y: p.y }));
+    if (minDistance(up, shifted) >= gap) hi = mid;
+    else lo = mid;
+  }
+  return hi;
+}
+
+/**
+ * Where each separate sticker goes on the sheets. Rows alternate stickers
+ * pointing up and down so they nest — or a plain grid, whichever fits more —
+ * and the block is centred on the sheet.
+ */
 export function sheetLayout(d: WheelDesign): { slots: SheetSlot[]; perPage: number; cell: Rect } {
-  const bounds = stickerBounds(d);
+  const b = stickerBounds(d, UP);
   const { widthMm: W, heightMm: H, gapMm: g, marginMm: m } = d.sheet;
-  const cols = Math.max(0, Math.floor((W - 2 * m + g) / (bounds.w + g)));
-  const rows = Math.max(0, Math.floor((H - 2 * m + g) / (bounds.h + g)));
+  const usableW = W - 2 * m;
+  const usableH = H - 2 * m;
+  const rows = Math.max(0, Math.floor((usableH + g) / (b.h + g)));
+
+  const gridCols = Math.max(0, Math.floor((usableW + g) / (b.w + g)));
+  const pitch = nestedPitch(d);
+  const nestCols = b.w <= usableW ? 1 + Math.floor((usableW - b.w) / pitch) : 0;
+  const nested = nestCols * rows > gridCols * rows;
+  const cols = nested ? nestCols : gridCols;
+  const step = nested ? pitch : b.w + g;
   const perPage = cols * rows;
-  if (!perPage) return { slots: [], perPage: 0, cell: bounds };
+  if (!perPage) return { slots: [], perPage: 0, cell: b };
+
+  const blockW = b.w + (cols - 1) * step;
+  const blockH = rows * b.h + (rows - 1) * g;
+  const x0 = (W - blockW) / 2;
+  const y0 = (H - blockH) / 2;
+  const count = d.fillSheet ? Math.ceil(d.segments / perPage) * perPage : d.segments;
   const slots: SheetSlot[] = [];
-  for (let i = 0; i < d.segments; i++) {
+  for (let i = 0; i < count; i++) {
     const k = i % perPage;
     const col = k % cols;
     const row = Math.floor(k / cols);
-    const x = m + col * (bounds.w + g);
-    const y = m + row * (bounds.h + g);
-    slots.push({ page: Math.floor(i / perPage), cx: x - bounds.x, cy: y - bounds.y });
+    const left = x0 + col * step;
+    const top = y0 + row * (b.h + g);
+    const down = nested && col % 2 === 1;
+    slots.push({
+      page: Math.floor(i / perPage),
+      segment: i % d.segments,
+      cx: left - b.x,
+      /* A DOWN sticker is the UP one mirrored within the same row band. */
+      cy: down ? top + b.y + b.h : top - b.y,
+      angle: down ? DOWN : UP,
+    });
   }
-  return { slots, perPage, cell: bounds };
+  return { slots, perPage, cell: b };
 }
