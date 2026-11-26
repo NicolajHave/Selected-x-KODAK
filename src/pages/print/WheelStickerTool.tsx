@@ -17,7 +17,7 @@ import {
   segmentShape,
   sheetLayout,
 } from '../../print/wheelLayout';
-import { buildWheelPdf } from '../../print/wheelPdf';
+import { buildWheelPdf, type WheelLayers } from '../../print/wheelPdf';
 import { artworkDataUrl, loadFonts } from '../../print/assets';
 import { downloadBytes } from '../../utils/download';
 import { ColorField, NumberField, SaveBadge, Section, useAutosave } from './controls';
@@ -38,7 +38,6 @@ const toDeg = (r: number) => (r * 180) / Math.PI;
 
 export function WheelStickerTool({ initial, by }: Props) {
   const [d, setD] = useState<WheelDesign>(initial);
-  const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const save = useAutosave('wheel', 'wheel', d, by);
 
@@ -55,21 +54,23 @@ export function WheelStickerTool({ initial, by }: Props) {
   const layout = useMemo(() => (d.cutMode === 'segments' ? sheetLayout(d) : null), [d]);
   const sheets = layout?.perPage ? Math.ceil(d.segments / layout.perPage) : 0;
 
-  const exportPdf = async () => {
-    setBusy(true);
+  const [busy, setBusyLayers] = useState<WheelLayers | null>(null);
+  const exportPdf = async (layers: WheelLayers) => {
+    setBusyLayers(layers);
     setError('');
     try {
-      const bytes = await buildWheelPdf(d, await loadFonts());
-      const mode = d.cutMode === 'whole' ? 'disc' : 'wedges';
+      const bytes = await buildWheelPdf(d, await loadFonts(), layers);
+      const mode = d.cutMode === 'whole' ? 'disc' : 'sheet';
+      const suffix = { both: 'print-and-cut', cut: 'cut-only-blank', print: 'print-only-for-stores' }[layers];
       downloadBytes(
         bytes,
-        `spin-win-stickers-${d.segments}seg-${d.outerMm}mm-${mode}.pdf`,
+        `spin-win-stickers-${d.segments}seg-${d.outerMm}mm-${mode}-${suffix}.pdf`,
         'application/pdf',
       );
     } catch (e) {
       setError(e instanceof Error ? e.message : 'Could not build the PDF.');
     } finally {
-      setBusy(false);
+      setBusyLayers(null);
     }
   };
 
@@ -428,12 +429,32 @@ export function WheelStickerTool({ initial, by }: Props) {
         </Section>
 
         <div className="sk-pt-actions">
-          <Button
-            onClick={() => void exportPdf()}
-            disabled={busy || (d.cutMode === 'segments' && !layout?.perPage)}
-          >
-            {busy ? 'Building PDF…' : 'Download print PDF ↓'}
-          </Button>
+          {(
+            [
+              ['both', 'Printed + kiss-cut ↓', 'For the sticker printer: prints the design and cuts it.'],
+              [
+                'cut',
+                'Kiss-cut only, blank ↓',
+                'For the sticker printer: blank stickers, cut but not printed.',
+              ],
+              [
+                'print',
+                'Print only, for stores ↓',
+                'For stores printing on the blank sheets: same positions, no cut lines. Print at 100 % / actual size.',
+              ],
+            ] as const
+          ).map(([layers, label, hint]) => (
+            <div key={layers} className="sk-pt-export">
+              <Button
+                variant={layers === 'both' ? 'primary' : 'ghost'}
+                onClick={() => void exportPdf(layers)}
+                disabled={Boolean(busy) || (d.cutMode === 'segments' && !layout?.perPage)}
+              >
+                {busy === layers ? 'Building PDF…' : label}
+              </Button>
+              <span className="sk-pt-note">{hint}</span>
+            </div>
+          ))}
           {error && <p className="sk-error">{error}</p>}
           {d.cutMode === 'segments' && layout?.perPage ? (
             <p className="sk-pt-note">
@@ -445,6 +466,8 @@ export function WheelStickerTool({ initial, by }: Props) {
                 ? ` + ${layout.slots.length - d.segments} spare${layout.slots.length - d.segments === 1 ? '' : 's'}`
                 : ''}
               . Order one sheet per wheel plus a few extra. Nothing but the stickers is printed on the sheet.
+              For blank sheets that stores print themselves, ask for printable sticker paper (laser/inkjet)
+              and for the waste around the stickers to be left on, so the sheets feed through office printers.
             </p>
           ) : null}
           <p className="sk-pt-note">
