@@ -2,6 +2,7 @@ import { useMemo, useState } from 'react';
 import { Button } from '../../components/ui/Button';
 import { pathToSvg } from '../../print/geometry';
 import {
+  NINE_UNITED_KNOB,
   NINE_UNITED_WHEEL,
   resizeSegments,
   type WheelDesign,
@@ -27,7 +28,8 @@ interface Props {
 }
 
 const SHEETS = [
-  { label: 'A4', w: 297, h: 210 },
+  { label: 'A4', w: 210, h: 297 },
+  { label: 'A4 landscape', w: 297, h: 210 },
   { label: 'A3', w: 420, h: 297 },
   { label: 'SRA3', w: 450, h: 320 },
 ];
@@ -107,7 +109,6 @@ export function WheelStickerTool({ initial, by }: Props) {
                 setD((cur) => ({
                   ...cur,
                   ...NINE_UNITED_WHEEL,
-                  knob: { ...NINE_UNITED_WHEEL.knob },
                   items: resizeSegments(cur.items, NINE_UNITED_WHEEL.segments),
                 }))
               }
@@ -118,7 +119,7 @@ export function WheelStickerTool({ initial, by }: Props) {
         >
           <p className="sk-pt-note">
             Set from Nine United's drawing (21.10.2026): Ø198 mm UV-printed disc, ten 36° segments, Ø60 mm
-            logo disc in the centre. Check the knob position on the sample before printing.
+            logo disc in the centre.
           </p>
           <div className="sk-pt-grid">
             <NumberField label="Segments" value={d.segments} min={2} max={48} onChange={setSegments} />
@@ -163,7 +164,7 @@ export function WheelStickerTool({ initial, by }: Props) {
             <input
               type="checkbox"
               checked={Boolean(d.knob)}
-              onChange={(e) => set({ knob: e.target.checked ? { ...NINE_UNITED_WHEEL.knob } : null })}
+              onChange={(e) => set({ knob: e.target.checked ? { ...NINE_UNITED_KNOB } : null })}
             />
             Cut a hole for the knob on the wheel face
           </label>
@@ -305,6 +306,14 @@ export function WheelStickerTool({ initial, by }: Props) {
                   hint="Room to place the sticker on the printed segment"
                 />
               </div>
+              <label className="sk-pt-check">
+                <input
+                  type="checkbox"
+                  checked={d.fillSheet}
+                  onChange={(e) => set({ fillSheet: e.target.checked })}
+                />
+                Fill empty places on the sheet with spare stickers
+              </label>
               <div className="sk-pt-chips">
                 {SHEETS.map((s) => (
                   <button
@@ -426,11 +435,22 @@ export function WheelStickerTool({ initial, by }: Props) {
             {busy ? 'Building PDF…' : 'Download print PDF ↓'}
           </Button>
           {error && <p className="sk-error">{error}</p>}
+          {d.cutMode === 'segments' && layout?.perPage ? (
+            <p className="sk-pt-note">
+              <b>Kiss-cut sheet:</b> {d.sheet.widthMm} × {d.sheet.heightMm} mm,{' '}
+              {sheets === 1
+                ? `one full wheel (${d.segments} stickers) per sheet`
+                : `${layout.perPage} stickers per sheet, ${sheets} sheets per wheel`}
+              {d.fillSheet && layout.slots.length > d.segments
+                ? ` + ${layout.slots.length - d.segments} spare${layout.slots.length - d.segments === 1 ? '' : 's'}`
+                : ''}
+              . Order one sheet per wheel plus a few extra. Nothing but the stickers is printed on the sheet.
+            </p>
+          ) : null}
           <p className="sk-pt-note">
             Vector PDF at 1:1 with {d.bleedMm} mm bleed and fonts embedded. The cut line is a spot colour
-            named
-            <b> CutContour</b>, which sticker printers' plotters cut along. Colours are RGB — ask the printer
-            to convert to CMYK.
+            named <b>CutContour</b>, which sticker printers use for the kiss cut (through the sticker, not the
+            backing). Colours are RGB — ask the printer to convert to CMYK.
           </p>
         </div>
       </div>
@@ -443,18 +463,18 @@ function SegmentArt({
   i,
   cx,
   cy,
-  pointUp,
+  drawAt,
   id,
 }: {
   d: WheelDesign;
   i: number;
   cx: number;
   cy: number;
-  pointUp: boolean;
+  drawAt: number | null;
   id: string;
 }) {
   const it = d.items[i % d.items.length];
-  const s = segmentShape(d, i, cx, cy, pointUp);
+  const s = segmentShape(d, i, cx, cy, drawAt);
   const lines = it.label
     .split('\n')
     .map((l) => l.trim())
@@ -519,12 +539,12 @@ function WheelPreview({ d: design }: { d: WheelDesign }) {
       aria-label="Wheel sticker preview"
     >
       {Array.from({ length: d.segments }, (_, i) => (
-        <SegmentArt key={i} d={d} i={i} cx={0} cy={0} pointUp={false} id="w" />
+        <SegmentArt key={i} d={d} i={i} cx={0} cy={0} drawAt={null} id="w" />
       ))}
       {dividers.length > 0 && <path d={pathToSvg(dividers)} stroke="#fff" strokeWidth={d.dividerMm} />}
       {wedges ? (
         Array.from({ length: d.segments }, (_, i) => (
-          <path key={i} d={pathToSvg(segmentShape(design, i, 0, 0, false).cut!)} className="sk-pt-cut" />
+          <path key={i} d={pathToSvg(segmentShape(design, i, 0, 0, null).cut!)} className="sk-pt-cut" />
         ))
       ) : (
         <path d={pathToSvg(discCut(d, 0, 0))} className="sk-pt-cut" fill="none" />
@@ -555,8 +575,10 @@ function SheetPreview({ d }: { d: WheelDesign }) {
         stroke="var(--rule-2)"
         strokeWidth={0.5}
       />
-      {slots.map((s, i) =>
-        s.page === 0 ? <SegmentArt key={i} d={d} i={i} cx={s.cx} cy={s.cy} pointUp id="s" /> : null,
+      {slots.map((s, k) =>
+        s.page === 0 ? (
+          <SegmentArt key={k} d={d} i={s.segment} cx={s.cx} cy={s.cy} drawAt={s.angle} id={`s${k}`} />
+        ) : null,
       )}
     </svg>
   );

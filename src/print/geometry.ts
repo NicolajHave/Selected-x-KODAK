@@ -320,3 +320,47 @@ export function splitEvenly<T>(items: T[], buckets: number): T[][] {
   }
   return out;
 }
+
+/**
+ * Points along a path, at most `step` mm apart (Bezier curves are sampled in
+ * small parameter steps). Used to measure clearances between shapes.
+ */
+export function pathPoints(cmds: PathCmd[], step = 1): { x: number; y: number }[] {
+  const out: { x: number; y: number }[] = [];
+  let start = { x: 0, y: 0 };
+  let cur = { x: 0, y: 0 };
+  const line = (to: { x: number; y: number }) => {
+    const n = Math.max(1, Math.ceil(Math.hypot(to.x - cur.x, to.y - cur.y) / step));
+    for (let k = 1; k <= n; k++)
+      out.push({ x: cur.x + ((to.x - cur.x) * k) / n, y: cur.y + ((to.y - cur.y) * k) / n });
+    cur = to;
+  };
+  for (const c of cmds) {
+    if (c.op === 'M') {
+      cur = start = { x: c.x, y: c.y };
+      out.push(cur);
+    } else if (c.op === 'L') line({ x: c.x, y: c.y });
+    else if (c.op === 'Z') line(start);
+    else {
+      const p0 = cur;
+      const n = Math.max(4, Math.ceil(Math.hypot(c.x - p0.x, c.y - p0.y) / step) * 2);
+      for (let k = 1; k <= n; k++) {
+        const t = k / n;
+        const u = 1 - t;
+        out.push({
+          x: u * u * u * p0.x + 3 * u * u * t * c.x1 + 3 * u * t * t * c.x2 + t * t * t * c.x,
+          y: u * u * u * p0.y + 3 * u * u * t * c.y1 + 3 * u * t * t * c.y2 + t * t * t * c.y,
+        });
+      }
+      cur = { x: c.x, y: c.y };
+    }
+  }
+  return out;
+}
+
+/** Smallest distance between two point clouds. */
+export function minDistance(a: { x: number; y: number }[], b: { x: number; y: number }[]): number {
+  let best = Infinity;
+  for (const p of a) for (const q of b) best = Math.min(best, Math.hypot(p.x - q.x, p.y - q.y));
+  return best;
+}

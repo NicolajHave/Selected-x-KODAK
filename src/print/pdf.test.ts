@@ -2,11 +2,11 @@ import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { PDFDict, PDFDocument, PDFName } from 'pdf-lib';
-import { PT_PER_MM } from './geometry';
-import { defaultWallTemplate, defaultWheel, distributeImages } from './designs';
+import { PT_PER_MM, minDistance, pathPoints, pathBounds } from './geometry';
+import { NINE_UNITED_KNOB, defaultWallTemplate, defaultWheel, distributeImages } from './designs';
 import { buildWheelPdf } from './wheelPdf';
 import { buildWallPrintPdf, buildWallProofPdf } from './wallPdf';
-import { knobSegment, segmentShape, sheetLayout } from './wheelLayout';
+import { DOWN, UP, knobSegment, segmentShape, sheetLayout } from './wheelLayout';
 
 const root = resolve(__dirname, '..');
 const fonts = {
@@ -37,10 +37,45 @@ describe('wheel sticker PDF', () => {
     expect(hasCutContour(doc, 0)).toBe(true);
   });
 
+  it('fits a full set of the 10 wheel stickers on one A4 kiss-cut sheet', async () => {
+    const d = defaultWheel();
+    const { slots, perPage } = sheetLayout(d);
+    expect(perPage).toBeGreaterThanOrEqual(10);
+    expect(new Set(slots.map((s) => s.angle))).toEqual(new Set([UP, DOWN])); // nested up/down
+
+    expect(slots).toHaveLength(perPage); // the rest of the sheet holds spares
+    expect(slots.slice(0, 10).map((s) => s.segment)).toEqual([0, 1, 2, 3, 4, 5, 6, 7, 8, 9]);
+    const shapes = slots.map((s) => segmentShape(d, s.segment, s.cx, s.cy, s.angle));
+    for (const sh of shapes) {
+      const b = pathBounds(sh.print);
+      expect(b.x).toBeGreaterThanOrEqual(d.sheet.marginMm - 0.5);
+      expect(b.y).toBeGreaterThanOrEqual(d.sheet.marginMm - 0.5);
+      expect(b.x + b.w).toBeLessThanOrEqual(d.sheet.widthMm - d.sheet.marginMm + 0.5);
+      expect(b.y + b.h).toBeLessThanOrEqual(d.sheet.heightMm - d.sheet.marginMm + 0.5);
+    }
+    // printed areas (incl. bleed) of neighbours keep the gap
+    const pts = shapes.map((sh) => pathPoints(sh.print, 0.5));
+    for (let a = 0; a < pts.length; a++)
+      for (let b = a + 1; b < pts.length; b++)
+        expect(minDistance(pts[a], pts[b])).toBeGreaterThan(d.sheet.gapMm - 0.6);
+
+    const doc = await PDFDocument.load(await buildWheelPdf(d, fonts));
+    expect(doc.getPageCount()).toBe(1);
+    expect(mm(doc.getPage(0).getWidth())).toBeCloseTo(210, 1);
+    expect(mm(doc.getPage(0).getHeight())).toBeCloseTo(297, 1);
+    expect(hasCutContour(doc, 0)).toBe(true);
+  });
+
   it('lays separate wedges out over as many sheets as needed', async () => {
-    const d = { ...defaultWheel(), cutMode: 'segments' as const, outerMm: 300, segments: 12 };
+    const d = {
+      ...defaultWheel(),
+      outerMm: 300,
+      segments: 12,
+      sheet: { widthMm: 420, heightMm: 297, gapMm: 4, marginMm: 10 },
+    };
     const { perPage } = sheetLayout(d);
     expect(perPage).toBeGreaterThan(0);
+    expect(sheetLayout({ ...d, fillSheet: false }).slots).toHaveLength(12);
     const doc = await PDFDocument.load(await buildWheelPdf(d, fonts));
     expect(doc.getPageCount()).toBe(Math.ceil(12 / perPage));
     expect(mm(doc.getPage(0).getWidth())).toBeCloseTo(420, 1);
@@ -48,13 +83,11 @@ describe('wheel sticker PDF', () => {
   });
 
   it('cuts the knob hole into the sticker of the segment it sits on', async () => {
-    const d = defaultWheel();
+    const d = { ...defaultWheel(), knob: NINE_UNITED_KNOB };
     expect(knobSegment(d)).toBe(2);
-    expect(segmentShape(d, 2, 0, 0, true).cut!.filter((c) => c.op === 'M')).toHaveLength(2);
-    expect(segmentShape(d, 1, 0, 0, true).cut!.filter((c) => c.op === 'M')).toHaveLength(1);
-    expect(segmentShape({ ...d, knob: null }, 2, 0, 0, true).cut!.filter((c) => c.op === 'M')).toHaveLength(
-      1,
-    );
+    expect(segmentShape(d, 2, 0, 0, UP).cut!.filter((c) => c.op === 'M')).toHaveLength(2);
+    expect(segmentShape(d, 1, 0, 0, UP).cut!.filter((c) => c.op === 'M')).toHaveLength(1);
+    expect(segmentShape({ ...d, knob: null }, 2, 0, 0, UP).cut!.filter((c) => c.op === 'M')).toHaveLength(1);
   });
 
   it('refuses a sheet too small for one wedge', async () => {

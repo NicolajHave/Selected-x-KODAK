@@ -52,6 +52,8 @@ export interface WheelDesign {
   /** Hole cut in the sticker for the knob; null = no knob. */
   knob: WheelKnob | null;
   sheet: { widthMm: number; heightMm: number; gapMm: number; marginMm: number };
+  /** Separate stickers: fill the last sheet's empty places with spare copies. */
+  fillSheet: boolean;
   items: WheelSegment[];
 }
 
@@ -69,23 +71,36 @@ const DEFAULT_SEGMENTS: WheelSegment[] = [
 /**
  * The tabletop wheel from Nine United's engineering drawing (21.10.2026):
  * Ø198 mm UV-printed acrylic disc, ten 36° segments with a boundary at
- * 12 o'clock, Ø60 mm logo disc in the centre, and a 12 × 8.7 mm knob near the
- * rim at about 3 o'clock. The knob's radius is read off the drawing — check it
- * on the sample.
+ * 12 o'clock and a Ø60 mm logo disc in the centre.
  */
 export const NINE_UNITED_WHEEL = {
   segments: 10,
   outerMm: 198,
   hubMm: 60,
   startDeg: 18,
-  knob: { angleDeg: 90, rMm: 83, lengthMm: 12, widthMm: 8.7, clearanceMm: 2 },
 } as const;
+
+/**
+ * The 12 × 8.7 mm knob near the rim at about 3 o'clock on the same drawing.
+ * Its exact position isn't confirmed, so stickers ignore it unless HQ turns
+ * the knob hole on.
+ */
+export const NINE_UNITED_KNOB: WheelKnob = {
+  angleDeg: 90,
+  rMm: 83,
+  lengthMm: 12,
+  widthMm: 8.7,
+  clearanceMm: 2,
+};
+
+/** A4 portrait: the sheet size for kiss-cut sticker sheets. */
+export const A4_SHEET = { widthMm: 210, heightMm: 297, gapMm: 3, marginMm: 6 };
 
 export function defaultWheel(): WheelDesign {
   return {
     version: 1,
     ...NINE_UNITED_WHEEL,
-    knob: { ...NINE_UNITED_WHEEL.knob },
+    knob: null,
     bleedMm: 2,
     dividerMm: 0,
     fontSizeMm: 5.5,
@@ -93,7 +108,8 @@ export function defaultWheel(): WheelDesign {
     orientation: 'radial',
     cutMode: 'segments',
     insetMm: 2,
-    sheet: { widthMm: 420, heightMm: 297, gapMm: 4, marginMm: 10 },
+    sheet: { ...A4_SHEET },
+    fillSheet: true,
     items: resizeSegments([], NINE_UNITED_WHEEL.segments),
   };
 }
